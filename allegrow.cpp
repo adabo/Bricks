@@ -11,6 +11,7 @@ AllegroW::AllegroW(Game &_game)
 		can_put_text(false),
 		can_draw(false),
 		can_update(false),
+		line(SCREEN_WIDTH / 2, SCREEN_HEIGHT /2 ),
 		game(_game)
 {}
 
@@ -27,6 +28,7 @@ void AllegroW::init_addons()
 {
 	al_init();
 	al_install_keyboard();
+	al_install_mouse();
 	al_init_font_addon();
 	al_init_primitives_addon();
 }
@@ -42,6 +44,7 @@ void AllegroW::create_objects()
 void AllegroW::register_objects()
 {
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
+	al_register_event_source(event_queue, al_get_mouse_event_source());
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 	al_register_event_source(event_queue, al_get_display_event_source(display));
 }
@@ -58,6 +61,10 @@ void AllegroW::handle_events()
 	int num_limit = sizeof(str) - strlen(str);
 
 	switch (event.type) {
+	case ALLEGRO_EVENT_MOUSE_AXES:
+		mouse.x = event.mouse.x;
+		mouse.y = event.mouse.y;
+		break;
 	case ALLEGRO_EVENT_KEY_DOWN:
 		if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 			game.is_running = false;
@@ -72,6 +79,7 @@ void AllegroW::handle_events()
 		break;
 	case ALLEGRO_EVENT_TIMER:
 		if (al_is_event_queue_empty(event_queue)) {
+			can_update = true;
 			can_draw = true;
 		}
 		break;
@@ -86,8 +94,17 @@ void AllegroW::draw()
 		al_clear_to_color(al_map_rgb(0, 0 , 0));
 
 		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", str);
-		al_draw_pixel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2,
+
+		// Draw line
+		for (int i = 0; i < 40; ++i) {
+			line.x += line.x_normal;
+			line.y += line.y_normal;
+			al_draw_pixel(line.x, line.y,
 					  al_map_rgb(255, 0, 255));
+		}
+
+		line.x = SCREEN_WIDTH / 2;
+		line.y = SCREEN_HEIGHT / 2;
 
 		al_flip_display();
 		can_draw = false;
@@ -96,5 +113,7 @@ void AllegroW::draw()
 
 void AllegroW::update()
 {
-	line.normalize_length(mouse.x, mouse.y);
+	if (can_update)
+		line.normalize_length(mouse.x, mouse.y);
+	can_update = false;
 }

@@ -22,6 +22,7 @@ int main(int argc, int *argv[])
 
 	while (game.is_running) {
 		allegrow.handle_events();
+		allegrow.update();
 		allegrow.draw();
 	}
 

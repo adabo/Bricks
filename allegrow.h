@@ -4,6 +4,7 @@
 #include <allegro5\allegro_primitives.h>
 #include <allegro5\timer.h>
 #include <allegro5\keyboard.h>
+#include <allegro5\mouse.h>
 #include <allegro5\allegro_font.h>
 #include "vector2d.h"
 
@@ -36,6 +37,7 @@ public:
 	/********************/
 
 	Vector2D line;
+	Vector2D mouse;
 	Game &game;
 	char keystr[10];
 	char str[40];

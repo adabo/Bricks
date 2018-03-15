@@ -127,10 +127,12 @@
     <ClCompile Include="allegrow.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="vector2d.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="allegrow.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="vector2d.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

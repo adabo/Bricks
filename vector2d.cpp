@@ -18,9 +18,13 @@ float Vector2D::get_distance()
 	return sqrt(x * x + y * y);
 }
 
-void Vector2D::normalize_length(_x_end, &_y_end)
+void Vector2D::normalize_length(float _x_end, float &_y_end)
 {
-	*this = *this - Vector2D{_x_end, _y_end};
+	Vector2D sides;
+	sides = Vector2D{_x_end, _y_end} - *this;
+	float distance = get_distance();
+	x_normal = x / distance;
+	y_normal = y / distance;
 }
 
 Vector2D Vector2D::operator+(const Vector2D &vector_input) const
