@@ -1,7 +1,6 @@
-#include "game.h"
-#include "allegrow.h"
 #include <iostream>
 #include "game.h"
+#include "allegrow.h"
 
 
 AllegroW::AllegroW(Game _game)
@@ -52,7 +51,8 @@ void AllegroW::handle_events()
 
 	switch (event.type) {
 	case ALLEGRO_EVENT_KEY_DOWN:
-		if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) game.is_running = false;
+		if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+			game.is_running = false;
 		strcat_s(str, al_keycode_to_name(event.keyboard.keycode));
 		break;
 	case ALLEGRO_EVENT_TIMER:
@@ -82,7 +82,4 @@ void AllegroW::draw()
 	}
 }
 
-void AllegroW::update()
-{
-
-}
+void AllegroW::update(){}

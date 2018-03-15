@@ -11,8 +11,7 @@ void sys_pause()
 	std::getchar();
 }
 
-//int main(int argc, int *argv[])
-int main()
+int main(int argc, int *argv[])
 {
 	Game game;
 	AllegroW allegrow(game);
