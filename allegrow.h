@@ -5,6 +5,7 @@
 #include <allegro5\timer.h>
 #include <allegro5\keyboard.h>
 #include <allegro5\allegro_font.h>
+#include "vector2d.h"
 
 #define FPS 60
 #define SCREEN_WIDTH 640
@@ -34,6 +35,7 @@ public:
 	float xt, yt;
 	/********************/
 
+	Vector2D line;
 	Game &game;
 	char keystr[10];
 	char str[40];

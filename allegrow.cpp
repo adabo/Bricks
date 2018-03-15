@@ -94,4 +94,7 @@ void AllegroW::draw()
 	}
 }
 
-void AllegroW::update(){}
+void AllegroW::update()
+{
+	line.normalize_length(mouse.x, mouse.y);
+}
