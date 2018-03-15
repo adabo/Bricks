@@ -7,7 +7,7 @@
 
 void sys_pause()
 {
-	std::cout << "Press Enter to continue ...";
+	std::cout << "Press Enter to continue ..." << std::endl;
 	std::getchar();
 }
 
@@ -17,6 +17,8 @@ int main(int argc, int *argv[])
 	AllegroW allegrow(game);
 
 	allegrow.start_allgro_services();
+
+	allegrow.start_timer();
 
 	while (game.is_running) {
 		allegrow.handle_events();

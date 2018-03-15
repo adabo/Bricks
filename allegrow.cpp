@@ -3,7 +3,7 @@
 #include "allegrow.h"
 
 
-AllegroW::AllegroW(Game _game)
+AllegroW::AllegroW(Game &_game)
 	:	str(""),
 		xt(1),
 		yt(1),
@@ -43,6 +43,11 @@ void AllegroW::register_objects()
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 	al_register_event_source(event_queue, al_get_display_event_source(display));
+}
+
+void AllegroW::start_timer()
+{
+	al_start_timer(timer);
 }
 
 void AllegroW::handle_events()

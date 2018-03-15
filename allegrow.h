@@ -2,6 +2,7 @@
 
 #include <allegro5\allegro.h>
 #include <allegro5\allegro_primitives.h>
+#include <allegro5\timer.h>
 #include <allegro5\keyboard.h>
 #include <allegro5\allegro_font.h>
 
@@ -15,7 +16,7 @@ class Game;
 class AllegroW
 {
 public:
-	AllegroW(Game _game);
+	AllegroW(Game &_game);
 	~AllegroW();
 
 	void start_allgro_services();
@@ -23,6 +24,7 @@ public:
 	void init_addons();
 	void create_objects();
 	void register_objects();
+	void start_timer();
 	void handle_events();
 
 	void draw();
