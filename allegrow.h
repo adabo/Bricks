@@ -35,6 +35,7 @@ public:
 	/********************/
 
 	Game &game;
+	char keystr[10];
 	char str[40];
 	bool can_put_text;
 	bool can_draw;

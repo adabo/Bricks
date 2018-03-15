@@ -25,6 +25,6 @@ int main(int argc, int *argv[])
 		allegrow.draw();
 	}
 
-	sys_pause();
+	//sys_pause();
 	return 0;
 }

@@ -5,6 +5,7 @@
 
 AllegroW::AllegroW(Game &_game)
 	:	str(""),
+		keystr(""),
 		xt(1),
 		yt(1),
 		can_put_text(false),
@@ -53,18 +54,25 @@ void AllegroW::start_timer()
 void AllegroW::handle_events()
 {
 	al_wait_for_event(event_queue, &event);
+	int num_chars = strlen(keystr);
+	int num_limit = sizeof(str) - strlen(str);
 
 	switch (event.type) {
 	case ALLEGRO_EVENT_KEY_DOWN:
 		if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 			game.is_running = false;
-		strcat_s(str, al_keycode_to_name(event.keyboard.keycode));
+
+		strcpy_s(keystr, al_keycode_to_name(event.keyboard.keycode));
+		/* if the size of the typed characters is less than 
+		 * the size of the remainder string */
+		num_chars = strlen(keystr);
+		num_limit = sizeof(str) - strlen(str);
+		if (num_chars < num_limit) strcat_s(str, keystr);
+		/* then append/concatenate the characters to the end of str*/
 		break;
 	case ALLEGRO_EVENT_TIMER:
 		if (al_is_event_queue_empty(event_queue)) {
-			can_put_text = true;
 			can_draw = true;
-			can_update = true;
 		}
 		break;
 	default:
@@ -74,15 +82,14 @@ void AllegroW::handle_events()
 
 void AllegroW::draw()
 {
-	if (can_put_text) {
-		al_clear_to_color(al_map_rgb(0, 0 , 0));
-		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", str);
-		al_flip_display();
-		can_put_text = false;
-	}
 	if (can_draw) {
+		al_clear_to_color(al_map_rgb(0, 0 , 0));
+
+		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", str);
 		al_draw_pixel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2,
 					  al_map_rgb(255, 0, 255));
+
+		al_flip_display();
 		can_draw = false;
 	}
 }
