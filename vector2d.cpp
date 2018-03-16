@@ -13,16 +13,16 @@ Vector2D::Vector2D(float _x, float _y)
 {
 }
 
-float Vector2D::get_distance()
+float Vector2D::get_distance(Vector2D &_sides)
 {
-	return sqrt(x * x + y * y);
+	return sqrt(_sides.x * _sides.x + _sides.y * _sides.y);
 }
 
-void Vector2D::normalize_length(float _x_end, float &_y_end)
+void Vector2D::normalize_length(float &_x_end, float &_y_end)
 {
 	Vector2D sides;
 	sides = Vector2D{_x_end, _y_end} - *this;
-	float distance = get_distance();
+	float distance = get_distance(sides);
 	x_normal = x / distance;
 	y_normal = y / distance;
 }

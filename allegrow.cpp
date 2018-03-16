@@ -57,34 +57,34 @@ void AllegroW::start_timer()
 void AllegroW::handle_events()
 {
 	al_wait_for_event(event_queue, &event);
-	int num_chars = strlen(keystr);
-	int num_limit = sizeof(str) - strlen(str);
+	int num_chars = 0;
+	int num_limit = 0;
 
 	switch (event.type) {
-	case ALLEGRO_EVENT_MOUSE_AXES:
-		mouse.x = event.mouse.x;
-		mouse.y = event.mouse.y;
-		break;
-	case ALLEGRO_EVENT_KEY_DOWN:
-		if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
-			game.is_running = false;
+		case ALLEGRO_EVENT_MOUSE_AXES:
+			mouse.x = event.mouse.x;
+			mouse.y = event.mouse.y;
+			break;
+		case ALLEGRO_EVENT_KEY_DOWN:
+			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+				game.is_running = false;
 
-		strcpy_s(keystr, al_keycode_to_name(event.keyboard.keycode));
-		/* if the size of the typed characters is less than 
-		 * the size of the remainder string */
-		num_chars = strlen(keystr);
-		num_limit = sizeof(str) - strlen(str);
-		if (num_chars < num_limit) strcat_s(str, keystr);
-		/* then append/concatenate the characters to the end of str*/
-		break;
-	case ALLEGRO_EVENT_TIMER:
-		if (al_is_event_queue_empty(event_queue)) {
-			can_update = true;
-			can_draw = true;
-		}
-		break;
-	default:
-		break;
+			strcpy_s(keystr, al_keycode_to_name(event.keyboard.keycode));
+			/* if the size of the typed characters is less than 
+			 * the size of the remainder string */
+			num_chars = strlen(keystr);
+			num_limit = sizeof(str) - strlen(str);
+			if (num_chars < num_limit) strcat_s(str, keystr);
+			/* then append/concatenate the characters to the end of str*/
+			break;
+		case ALLEGRO_EVENT_TIMER:
+			if (al_is_event_queue_empty(event_queue)) {
+				can_update = true;
+				can_draw = true;
+			}
+			break;
+		default:
+			break;
 	}
 }
 
@@ -93,7 +93,8 @@ void AllegroW::draw()
 	if (can_draw) {
 		al_clear_to_color(al_map_rgb(0, 0 , 0));
 
-		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", str);
+		//al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", str);
+		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%d", mouse.x);
 
 		// Draw line
 		for (int i = 0; i < 40; ++i) {
