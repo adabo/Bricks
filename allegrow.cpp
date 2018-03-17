@@ -1,6 +1,7 @@
-#include <iostream>
+//#include <iostream>
 #include "game.h"
 #include "allegrow.h"
+#include "vector2d.h"
 
 
 AllegroW::AllegroW(Game &_game)
@@ -11,7 +12,7 @@ AllegroW::AllegroW(Game &_game)
 		can_put_text(false),
 		can_draw(false),
 		can_update(false),
-		line(SCREEN_WIDTH / 2, SCREEN_HEIGHT /2 ),
+		line(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
 		game(_game)
 {}
 

@@ -1,4 +1,3 @@
-//#include "game.h"
 #include  <iostream>
 #include "allegrow.h"
 #include "game.h"

@@ -6,12 +6,13 @@
 #include <allegro5\keyboard.h>
 #include <allegro5\mouse.h>
 #include <allegro5\allegro_font.h>
-#include "vector2d.h"
+//#include "vector2d.h"
 
 #define FPS 60
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+class Vector2D;
 class Game;
 
 /* AllegroW: Allegrow Wrapper */
