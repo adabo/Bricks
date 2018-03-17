@@ -1,19 +1,16 @@
 //#include <iostream>
-#include "game.h"
 #include "allegrow.h"
 #include "vector2d.h"
+#include <stdio.h>
 
-
-AllegroW::AllegroW(Game &_game)
+AllegroW::AllegroW()
 	:	str(""),
 		keystr(""),
 		xt(1),
 		yt(1),
 		can_put_text(false),
 		can_draw(false),
-		can_update(false),
-		line(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2),
-		game(_game)
+		can_update(false)
 {}
 
 AllegroW::~AllegroW(){}
@@ -55,7 +52,7 @@ void AllegroW::start_timer()
 	al_start_timer(timer);
 }
 
-void AllegroW::handle_events()
+void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 {
 	al_wait_for_event(event_queue, &event);
 	int num_chars = 0;
@@ -63,12 +60,12 @@ void AllegroW::handle_events()
 
 	switch (event.type) {
 		case ALLEGRO_EVENT_MOUSE_AXES:
-			mouse.x = event.mouse.x;
-			mouse.y = event.mouse.y;
+			_mouse.x = event.mouse.x;
+			_mouse.y = event.mouse.y;
 			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
-				game.is_running = false;
+				_game_is_running = false;
 
 			strcpy_s(keystr, al_keycode_to_name(event.keyboard.keycode));
 			/* if the size of the typed characters is less than 
@@ -89,33 +86,35 @@ void AllegroW::handle_events()
 	}
 }
 
-void AllegroW::draw()
+void AllegroW::draw(Vector2D &_line, Vector2D &_mouse)
 {
 	if (can_draw) {
 		al_clear_to_color(al_map_rgb(0, 0 , 0));
 
 		//al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", str);
-		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%d", mouse.x);
+		char result[50];
+		sprintf_s(result, "%f", _mouse.x);
+		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", result);
 
 		// Draw line
 		for (int i = 0; i < 40; ++i) {
-			line.x += line.x_normal;
-			line.y += line.y_normal;
-			al_draw_pixel(line.x, line.y,
+			_line.x += _line.x_normal;
+			_line.y += _line.y_normal;
+			al_draw_pixel(_line.x, _line.y,
 					  al_map_rgb(255, 0, 255));
 		}
 
-		line.x = SCREEN_WIDTH / 2;
-		line.y = SCREEN_HEIGHT / 2;
+		_line.x = SCREEN_WIDTH / 2;
+		_line.y = SCREEN_HEIGHT / 2;
 
 		al_flip_display();
 		can_draw = false;
 	}
 }
 
-void AllegroW::update()
+void AllegroW::update(Vector2D &_line, Vector2D &_mouse)
 {
 	if (can_update)
-		line.normalize_length(mouse.x, mouse.y);
+		_line.normalize_length(_mouse.x, _mouse.y);
 	can_update = false;
 }

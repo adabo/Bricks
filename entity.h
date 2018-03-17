@@ -1,6 +1,7 @@
-class Vector2D;
+#pragma once
+#include "vector2d.h"
 
-struct ALLEGRO_COLOR;
+#include <allegro5\color.h>
 
 class Entity
 {

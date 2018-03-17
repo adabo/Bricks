@@ -13,18 +13,6 @@ void sys_pause()
 int main(int argc, int *argv[])
 {
 	Game game;
-	AllegroW allegrow(game);
-
-	allegrow.start_allgro_services();
-
-	allegrow.start_timer();
-
-	while (game.is_running) {
-		allegrow.handle_events();
-		allegrow.update();
-		allegrow.draw();
-	}
-
-	//sys_pause();
+	game.go();
 	return 0;
 }

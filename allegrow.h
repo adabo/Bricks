@@ -12,14 +12,16 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
-class Vector2D;
-class Game;
+//class Vector2D;
+//class Game;
 
 /* AllegroW: Allegrow Wrapper */
+class Vector2D;
+
 class AllegroW
 {
 public:
-	AllegroW(Game &_game);
+	AllegroW();
 	~AllegroW();
 
 	void start_allgro_services();
@@ -28,18 +30,15 @@ public:
 	void create_objects();
 	void register_objects();
 	void start_timer();
-	void handle_events();
+	void handle_events(Vector2D &_mouse, bool &_game_is_running);
 
-	void draw();
-	void update();
+	void draw(Vector2D &_line, Vector2D &_mouse);
+	void update(Vector2D &_line, Vector2D &_mouse);
 
 	/* Temporary members*/
 	float xt, yt;
 	/********************/
 
-	Vector2D line;
-	Vector2D mouse;
-	Game &game;
 	char keystr[10];
 	char str[40];
 	bool can_put_text;
