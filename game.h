@@ -1,4 +1,8 @@
 #pragma once
+#include <vector>
+#include "entity.h"
+#include "allegrow.h"
+#include "vector2d.h"
 
 #include <allegro5\allegro.h>
 #include <allegro5\allegro_primitives.h>
@@ -12,27 +16,17 @@ class Game
 public:
 	Game();
 	~Game();
-	void init_allegro_systems();
-	void init_allegro();
-	void init_addons();
-	void init_timer();
-	void init_display();
-	void create_event_queue();
-	void register_event_sources();
-	void display_screen();
-	void start_timer();
-	void init_timeout();
-	void handle_events();
-	void update();
-	void draw();
-	void cleanup();
+	
+	void go();
 
-	bool is_running;
-	bool can_redraw;
-	int return_value;
-	ALLEGRO_EVENT event;
-	ALLEGRO_TIMEOUT timeout;
-	ALLEGRO_DISPLAY *display = NULL;
-	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
-	ALLEGRO_TIMER *timer = NULL;
+	AllegroW allegrow;
+
+	Vector2D mouse;
+	bool game_is_running;
+	std::vector<Entity> bullet;
+	Vector2D line;
+	Entity hero,
+		   block,
+		   paddle,
+		   boundary;
 };
