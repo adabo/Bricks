@@ -1,6 +1,8 @@
 //#include <iostream>
 #include "allegrow.h"
 #include "vector2d.h"
+#include "entity.h"
+#include <iostream>
 #include <stdio.h>
 
 AllegroW::AllegroW()
@@ -86,35 +88,60 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 	}
 }
 
-void AllegroW::draw(Vector2D &_line, Vector2D &_mouse)
+void AllegroW::draw(std::vector<Entity> &_bullets)
 {
 	if (can_draw) {
 		al_clear_to_color(al_map_rgb(0, 0 , 0));
+		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", "Testing");
 
-		//al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", str);
-		char result[50];
-		sprintf_s(result, "%f", _mouse.x);
-		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", result);
-
-		// Draw line
-		for (int i = 0; i < 40; ++i) {
-			_line.x += _line.x_normal;
-			_line.y += _line.y_normal;
-			al_draw_pixel(_line.x, _line.y,
-					  al_map_rgb(255, 0, 255));
-		}
-
-		_line.x = SCREEN_WIDTH / 2;
-		_line.y = SCREEN_HEIGHT / 2;
 
 		al_flip_display();
 		can_draw = false;
 	}
 }
 
-void AllegroW::update(Vector2D &_line, Vector2D &_mouse)
+/* TODO Split updates per entity. Too many arguments for main update
+ * But how do you pass ALL the entities from game? pass the whole game object?)
+ * However, we could just load up the argument list with every single entity.
+ * But how do you compare collision for EVERY entity against EVERY entity?*/
+void AllegroW::update(std::vector<Entity> &_bullets,
+					  std::vector<Entity> &_blocks,
+					  Entity &_paddle,
+					  Entity &_boundary)
 {
-	if (can_update)
-		_line.normalize_length(_mouse.x, _mouse.y);
+	if (can_update){
+		handle_bullets_spawn(_bullets);
+
+		/* check if there's collision */
+		for(int ent1 = 0;
+			ent1 < _bullets.size() || ent1 < _blocks.size();
+			++ent1)
+			for (int ent2 = 0; ent2 < _blocks.size(); ++ent2)
+				handle_collision(_bullets[ent1], _blocks[ent2]);
+
+	}
 	can_update = false;
+}
+
+void AllegroW::handle_bullets_spawn(std::vector<Entity> &_bullets)
+{
+	//_bullets.emplace_back((SCREEN_WIDTH / 2, SCREEN_WIDTH / 2, 1,1));
+	//  //Get index # of last element
+	//int index = _bullets.size();
+	//_bullets[index].set_sides();
+}
+
+void AllegroW::clamp_entity_to_screen(Vector2D &_entity_coord, int offset)
+{
+	if (_entity_coord.x < 1) 			 _entity_coord.x = 1;
+	if (_entity_coord.x > SCREEN_WIDTH)  _entity_coord.x = SCREEN_WIDTH - 1;
+	if (_entity_coord.y < 1) 			 _entity_coord.y = 1;
+	if (_entity_coord.y > SCREEN_HEIGHT) _entity_coord.y = SCREEN_HEIGHT -1;
+}
+
+void AllegroW::handle_collision(Entity &_ent1, Entity &_ent2)
+{
+	if (_ent1 > _ent2)
+		std::cout << "collision!" << std::endl;
+
 }
