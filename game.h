@@ -20,6 +20,6 @@ public:
 	//Vector2D line;
 	bool game_is_running;
 	std::vector<Entity> bullets;
-	std::vector<Entity> blocks;
+	std::vector<Entity> bricks;
 	Entity paddle, boundary;
 };

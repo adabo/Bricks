@@ -91,7 +91,7 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 	}
 }
 
-void AllegroW::draw(std::vector<Entity> &_bullets)
+void AllegroW::draw(std::vector<Entity> &_bullets, std::vector<Entity> &_bricks)
 {
 	if (can_draw) {
 		al_clear_to_color(al_map_rgb(0, 0 , 0));
@@ -99,6 +99,7 @@ void AllegroW::draw(std::vector<Entity> &_bullets)
 
 		// Or draw_entity( Entity &_ent);
 		draw_bullet(_bullets);
+		draw_brick_grid(_bricks);
 
 		al_flip_display();
 		can_draw = false;
@@ -118,18 +119,18 @@ void AllegroW::draw_bullet(std::vector<Entity> &_bullets)
  * However, we could just load up the argument list with every single entity.
  * But how do you compare collision for EVERY entity against EVERY entity?*/
 void AllegroW::update(std::vector<Entity> &_bullets,
-					  std::vector<Entity> &_blocks,
+					  std::vector<Entity> &_bricks,
 					  Entity &_paddle,
 					  Entity &_boundary)
 {
 	if (can_update){
 		if (mouse_button_is_down) {
-			handle_bullets_spawn(_bullets);
+			spawn_entities(_bullets);
 
 			/* check if there's collision */
 			for (int ent1 = 0; ent1 < _bullets.size(); ++ent1)
-				for (int ent2 = 0; ent2 < _blocks.size(); ++ent2)
-					handle_collision(_bullets[ent1], _blocks[ent2]);
+				for (int ent2 = 0; ent2 < _bricks.size(); ++ent2)
+					handle_collision(_bullets[ent1], _bricks[ent2]);
 			mouse_button_is_down = false;
 		}
 
@@ -143,7 +144,7 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 	can_update = false;
 }
 
-void AllegroW::handle_bullets_spawn(std::vector<Entity> &_bullets)
+void AllegroW::spawn_entities(std::vector<Entity> &_bullets)
 {
 	// Add new bullet to end of array
 	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
@@ -177,4 +178,40 @@ void AllegroW::handle_collision(Entity &_ent1, Entity &_ent2)
 	if (_ent1 > _ent2)
 		std::cout << "collision!" << std::endl;
 
+}
+
+void AllegroW::spawn_brick_grid(std::vector<Entity> &_bricks)
+{
+	int col = 4, row = 8;
+
+	for (int brick_count = 0; brick_count < col * row; ++brick_count) {
+	}
+
+	for (int c_index = 0; c_index < col; ++c_index) {
+		for (int r_index = 0; r_index < row; ++r_index) {
+			_bricks.emplace_back(Vector2D(r_index * 60, c_index * 60), Dimension(50,50));
+			_bricks[c_index + r_index].is_dead = false;
+		}
+	}
+}
+
+void AllegroW::update_brick_grid(std::vector<Entity> &_bricks)
+{
+
+}
+
+void AllegroW::draw_brick_grid(std::vector<Entity> &_bricks)
+{
+	int i = 0;
+	int col = 4, row = 8;
+
+	for (int c_index = 0; c_index < col; ++c_index) {
+		for (int r_index = 0; r_index < row; ++r_index) {
+			al_draw_filled_rectangle(_bricks[i].coord.x, _bricks[i].coord.y,
+									 _bricks[i].coord.x + _bricks[i].dimension.width,
+									 _bricks[i].coord.y + _bricks[i].dimension.height,
+									 al_map_rgb(0, 255, 100));
+			++i;
+		}
+	}
 }
