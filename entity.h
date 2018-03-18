@@ -19,14 +19,14 @@ class Entity
 {
 public:
 	Entity();
-	Entity(float _x, float _y, float _width, float _height);
+	Entity(Vector2D _coord, Dimension _dimension);
 	~Entity();
 
 	void set_sides();
 	bool operator>(const Entity &_rhs) const;
 
 	Vector2D coord;
-	Vector2D normal;
+	//Vector2D normal;
 	Vector2D side;
 	Dimension dimension;
 

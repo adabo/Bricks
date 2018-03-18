@@ -2,8 +2,8 @@
 
 Entity::Entity(){}
 
-Entity::Entity(float _x, float _y, float _width, float _height)
-	:coord(_x,_y), dimension(_width, _height)
+Entity::Entity(Vector2D _coord, Dimension _dimension)
+	:coord(_coord), dimension(_dimension)
 	//: coord.x(_x), coord.y(_y),
 	 // dimension.width(_width), dimension.height(_height)
 {
@@ -18,8 +18,6 @@ void Entity::set_sides()
 	dimension.left = coord.x;
 	dimension.right = coord.x + dimension.width;
 }
-
-
 
 bool Entity::operator>(const Entity &_rhs) const
 {

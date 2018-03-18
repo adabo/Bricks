@@ -38,6 +38,7 @@ public:
 	void handle_collision(Entity &_ent1, Entity &_ent2);
 
 	void draw(std::vector<Entity> &_bullet);
+	void draw_bullet(std::vector<Entity> &_bullets);
 	void update(std::vector<Entity> &_bullets,
 				std::vector<Entity> &_blocks,
 				Entity &_paddle,
@@ -47,11 +48,13 @@ public:
 	float xt, yt;
 	/********************/
 
+	float x_mouse, y_mouse;
 	char keystr[10];
 	char str[40];
 	bool can_put_text;
 	bool can_draw;
 	bool can_update;
+	bool mouse_button_is_down;
 	ALLEGRO_EVENT_QUEUE *event_queue;
 	ALLEGRO_DISPLAY *display;
 	ALLEGRO_EVENT event;

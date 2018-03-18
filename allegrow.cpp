@@ -62,8 +62,11 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 
 	switch (event.type) {
 		case ALLEGRO_EVENT_MOUSE_AXES:
-			_mouse.x = event.mouse.x;
-			_mouse.y = event.mouse.y;
+			break;
+		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+			x_mouse = event.mouse.x;
+			y_mouse = event.mouse.y;
+			mouse_button_is_down = true;
 			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
@@ -94,10 +97,20 @@ void AllegroW::draw(std::vector<Entity> &_bullets)
 		al_clear_to_color(al_map_rgb(0, 0 , 0));
 		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", "Testing");
 
+		// Or draw_entity( Entity &_ent);
+		draw_bullet(_bullets);
 
 		al_flip_display();
 		can_draw = false;
 	}
+}
+
+void AllegroW::draw_bullet(std::vector<Entity> &_bullets)
+{
+	if (_bullets.size() > 0)
+		for (int i = 0; i < _bullets.size(); ++i)
+			al_draw_pixel(_bullets[i].coord.x, _bullets[i].coord.y,
+				al_map_rgb(255, 0, 255));
 }
 
 /* TODO Split updates per entity. Too many arguments for main update
@@ -110,14 +123,21 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 					  Entity &_boundary)
 {
 	if (can_update){
-		handle_bullets_spawn(_bullets);
+		if (mouse_button_is_down) {
+			handle_bullets_spawn(_bullets);
 
-		/* check if there's collision */
-		for(int ent1 = 0;
-			ent1 < _bullets.size() || ent1 < _blocks.size();
-			++ent1)
-			for (int ent2 = 0; ent2 < _blocks.size(); ++ent2)
-				handle_collision(_bullets[ent1], _blocks[ent2]);
+			/* check if there's collision */
+			for (int ent1 = 0; ent1 < _bullets.size(); ++ent1)
+				for (int ent2 = 0; ent2 < _blocks.size(); ++ent2)
+					handle_collision(_bullets[ent1], _blocks[ent2]);
+			mouse_button_is_down = false;
+		}
+
+		/* Increment heading */
+		for (int i = 0; i < _bullets.size(); ++i) {
+			_bullets[i].coord.x += _bullets[i].coord.x_normal;
+			_bullets[i].coord.y += _bullets[i].coord.y_normal;
+		}
 
 	}
 	can_update = false;
@@ -125,10 +145,23 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 
 void AllegroW::handle_bullets_spawn(std::vector<Entity> &_bullets)
 {
-	//_bullets.emplace_back((SCREEN_WIDTH / 2, SCREEN_WIDTH / 2, 1,1));
-	//  //Get index # of last element
-	//int index = _bullets.size();
-	//_bullets[index].set_sides();
+	// Add new bullet to end of array
+	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+	Dimension new_dimension(1,1);
+	_bullets.emplace_back(new_coord, new_dimension);
+
+  	//Get index # of last element
+	int index = _bullets.size() - 1;
+
+	// Set dimension of top,bot,left, right
+	_bullets[index].set_sides();
+
+	// Normalize the vector
+	float x = x_mouse;
+	float y = y_mouse;
+	if (index > 0)
+		std::cout << "x > 0" << std::endl;
+	_bullets[index].coord.normalize_length(x, y);
 }
 
 void AllegroW::clamp_entity_to_screen(Vector2D &_entity_coord, int offset)
