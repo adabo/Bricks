@@ -2,10 +2,8 @@
 
 Entity::Entity(){}
 
-Entity::Entity(Vector2D _coord, Dimension _dimension)
-	:coord(_coord), dimension(_dimension)
-	//: coord.x(_x), coord.y(_y),
-	 // dimension.width(_width), dimension.height(_height)
+Entity::Entity(Vector2D _coord, Dimension _dimension, float _speed)
+	:coord(_coord), dimension(_dimension), speed(_speed)
 {
 }
 

@@ -35,17 +35,17 @@ public:
 	void handle_events(Vector2D &_mouse, bool &_game_is_running);
 	void spawn_entities(std::vector<Entity> &_bullets);
 	void clamp_entity_to_screen(Vector2D &_entity_coord, int offset);
-	void handle_collision(Entity &_ent1, Entity &_ent2);
-
 	void draw(std::vector<Entity> &_bullets, std::vector<Entity> &_bricks);
 	void draw_bullet(std::vector<Entity> &_bullets);
+	void draw_brick_grid(std::vector<Entity> &_bricks);
 	void update(std::vector<Entity> &_bullets,
 				std::vector<Entity> &_bricks,
 				Entity &_paddle,
 				Entity &_boundary);
-	void spawn_brick_grid(std::vector<Entity> &_bricks);
 	void update_brick_grid(std::vector<Entity> &_bricks);
-	void draw_brick_grid(std::vector<Entity> &_bricks);
+	bool is_colliding(Entity &_ent1, Entity &_ent2);
+	void spawn_brick_grid(std::vector<Entity> &_bricks);
+	void remove_dead(Entity &_entity);
 
 	/* Temporary members*/
 	float xt, yt;

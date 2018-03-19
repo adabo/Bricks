@@ -15,7 +15,7 @@ AllegroW::AllegroW()
 		can_update(false)
 {}
 
-AllegroW::~AllegroW(){}
+AllegroW::~AllegroW() {}
 
 void AllegroW::start_allgro_services()
 {
@@ -114,6 +114,27 @@ void AllegroW::draw_bullet(std::vector<Entity> &_bullets)
 				al_map_rgb(255, 0, 255));
 }
 
+void AllegroW::draw_brick_grid(std::vector<Entity> &_bricks)
+{
+	int i = 0;
+	int col = 4, row = 8;
+	float x,y,width,height;
+
+	for (int c_index = 0; c_index < col; ++c_index) {
+		for (int r_index = 0; r_index < row; ++r_index) {
+			if (_bricks[i].is_dead) continue;
+			// temp assigment
+			x = _bricks[i].coord.x,
+			y = _bricks[i].coord.y,
+		  	width = _bricks[i].dimension.width, 
+	  		height = _bricks[i].dimension.height;
+
+			al_draw_filled_rectangle(x, y, x + width, y + height,
+									 al_map_rgb(100, 100, 100));
+			++i;
+		}
+	}
+}
 /* TODO Split updates per entity. Too many arguments for main update
  * But how do you pass ALL the entities from game? pass the whole game object?)
  * However, we could just load up the argument list with every single entity.
@@ -123,39 +144,65 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 					  Entity &_paddle,
 					  Entity &_boundary)
 {
-	if (can_update){
+	if (can_update) {
 		if (mouse_button_is_down) {
 			spawn_entities(_bullets);
-
-			/* check if there's collision */
-			for (int ent1 = 0; ent1 < _bullets.size(); ++ent1)
-				for (int ent2 = 0; ent2 < _bricks.size(); ++ent2)
-					handle_collision(_bullets[ent1], _bricks[ent2]);
 			mouse_button_is_down = false;
 		}
 
-		/* Increment heading */
-		for (int i = 0; i < _bullets.size(); ++i) {
-			_bullets[i].coord.x += _bullets[i].coord.x_normal;
-			_bullets[i].coord.y += _bullets[i].coord.y_normal;
+		if (_bullets.size() > 0) {
+			/* Increment heading */
+			for (int i = 0; i < _bullets.size(); ++i) {
+				_bullets[i].coord.x += _bullets[i].coord.x_normal * _bullets[i].speed;
+				_bullets[i].coord.y += _bullets[i].coord.y_normal * _bullets[i].speed;
+			}
+
+			/* check if there's collision */
+			std::vector<Entity>::iterator brk_it = _bricks.begin();
+			std::vector<Entity>::iterator blt_it = _bullets.begin();
+			bool can_break = false;
+			for (int blt = 0; blt < _bullets.size(); ++blt,++blt_it) {
+
+				for (int brk = 0; brk < _bricks.size(); ++brk, ++brk_it)
+					if (is_colliding(_bullets[blt], _bricks[brk])) {
+						// Set to true here and check for truth at draw time
+						// ... for now?
+						// TODO use remove_dead()
+						brk_it->is_dead = true;
+						blt_it->is_dead = true;
+
+						_bullets.erase(blt_it);
+						can_break = true;
+						break;
+					}
+				if (can_break) break;
+				// Reset bricks array iterator to first
+				brk_it = _bricks.begin();
+			}
 		}
 
 	}
 	can_update = false;
 }
 
+void AllegroW::update_brick_grid(std::vector<Entity> &_bricks)
+{
+
+}
+
 void AllegroW::spawn_entities(std::vector<Entity> &_bullets)
 {
 	// Add new bullet to end of array
-	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 20);
 	Dimension new_dimension(1,1);
-	_bullets.emplace_back(new_coord, new_dimension);
+	float speed = 7;
+	_bullets.emplace_back(new_coord, new_dimension, speed);
 
   	//Get index # of last element
 	int index = _bullets.size() - 1;
 
 	// Set dimension of top,bot,left, right
-	_bullets[index].set_sides();
+	//_bullets[index].set_sides();
 
 	// Normalize the vector
 	float x = x_mouse;
@@ -173,11 +220,11 @@ void AllegroW::clamp_entity_to_screen(Vector2D &_entity_coord, int offset)
 	if (_entity_coord.y > SCREEN_HEIGHT) _entity_coord.y = SCREEN_HEIGHT -1;
 }
 
-void AllegroW::handle_collision(Entity &_ent1, Entity &_ent2)
+bool AllegroW::is_colliding(Entity &_ent1, Entity &_ent2)
 {
-	if (_ent1 > _ent2)
-		std::cout << "collision!" << std::endl;
-
+	_ent1.set_sides();
+	_ent2.set_sides();
+	return _ent1 > _ent2;
 }
 
 void AllegroW::spawn_brick_grid(std::vector<Entity> &_bricks)
@@ -189,29 +236,13 @@ void AllegroW::spawn_brick_grid(std::vector<Entity> &_bricks)
 
 	for (int c_index = 0; c_index < col; ++c_index) {
 		for (int r_index = 0; r_index < row; ++r_index) {
-			_bricks.emplace_back(Vector2D(r_index * 60, c_index * 60), Dimension(50,50));
-			_bricks[c_index + r_index].is_dead = false;
+			_bricks.emplace_back(Vector2D(r_index * 60, c_index * 60), Dimension(50,50),0);
+			_bricks[_bricks.size() - 1].is_dead = false;
+			//_bricks[c_index + r_index].set_sides();
 		}
 	}
 }
-
-void AllegroW::update_brick_grid(std::vector<Entity> &_bricks)
+void AllegroW::remove_dead(Entity &_entity)
 {
 
-}
-
-void AllegroW::draw_brick_grid(std::vector<Entity> &_bricks)
-{
-	int i = 0;
-	int col = 4, row = 8;
-
-	for (int c_index = 0; c_index < col; ++c_index) {
-		for (int r_index = 0; r_index < row; ++r_index) {
-			al_draw_filled_rectangle(_bricks[i].coord.x, _bricks[i].coord.y,
-									 _bricks[i].coord.x + _bricks[i].dimension.width,
-									 _bricks[i].coord.y + _bricks[i].dimension.height,
-									 al_map_rgb(0, 255, 100));
-			++i;
-		}
-	}
 }

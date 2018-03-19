@@ -19,7 +19,7 @@ class Entity
 {
 public:
 	Entity();
-	Entity(Vector2D _coord, Dimension _dimension);
+	Entity(Vector2D _coord, Dimension _dimension, float _speed);
 	~Entity();
 
 	void set_sides();
