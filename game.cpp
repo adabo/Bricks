@@ -16,10 +16,12 @@ void Game::go()
 
 	allegrow.spawn_brick_grid(bricks);
 
+	allegrow.spawn_edge_boundaries(boundaries);
+
 	while (game_is_running) {
 		allegrow.handle_events(paddle.coord, game_is_running);
-		allegrow.update(bullets, bricks, paddle, boundary);
-		allegrow.draw(bullets, bricks);
+		allegrow.update(bullets, bricks, boundaries, paddle);
+		allegrow.draw(bullets, bricks, boundaries);
 	}
 
 	//sys_pause();

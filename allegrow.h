@@ -1,3 +1,4 @@
+/* AllegroW: Allegro Wrapper */
 #pragma once
 
 #include <allegro5\allegro.h>
@@ -16,7 +17,6 @@
 //class Vector2D;
 //class Game;
 
-/* AllegroW: Allegrow Wrapper */
 class Vector2D;
 class Entity;
 
@@ -35,17 +35,20 @@ public:
 	void handle_events(Vector2D &_mouse, bool &_game_is_running);
 	void spawn_entities(std::vector<Entity> &_bullets);
 	void clamp_entity_to_screen(Vector2D &_entity_coord, int offset);
-	void draw(std::vector<Entity> &_bullets, std::vector<Entity> &_bricks);
+	void draw(std::vector<Entity> &_bullets, std::vector<Entity> &_bricks, std::vector<Entity> &_boundaries);
 	void draw_bullet(std::vector<Entity> &_bullets);
 	void draw_brick_grid(std::vector<Entity> &_bricks);
+	void draw_edge_boundaries(std::vector<Entity> &_boundaries);
 	void update(std::vector<Entity> &_bullets,
 				std::vector<Entity> &_bricks,
-				Entity &_paddle,
-				Entity &_boundary);
+				std::vector<Entity> &_boundaries,
+				Entity &_paddle);
 	void update_brick_grid(std::vector<Entity> &_bricks);
 	bool is_colliding(Entity &_ent1, Entity &_ent2);
 	void spawn_brick_grid(std::vector<Entity> &_bricks);
+	void spawn_edge_boundaries(std::vector<Entity> &_boundaries);
 	void remove_dead(Entity &_entity);
+	void bounce_bullet();
 
 	/* Temporary members*/
 	float xt, yt;
@@ -57,6 +60,7 @@ public:
 	bool can_put_text;
 	bool can_draw;
 	bool can_update;
+	bool key_is_down;
 	bool mouse_button_is_down;
 	ALLEGRO_EVENT_QUEUE *event_queue;
 	ALLEGRO_DISPLAY *display;

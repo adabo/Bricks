@@ -21,5 +21,6 @@ public:
 	bool game_is_running;
 	std::vector<Entity> bullets;
 	std::vector<Entity> bricks;
-	Entity paddle, boundary;
+	std::vector<Entity> boundaries;
+	Entity paddle;
 };
