@@ -73,8 +73,8 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 				_game_is_running = false;
 
 			strcpy_s(keystr, al_keycode_to_name(event.keyboard.keycode));
-			/* if the size of the typed characters is less than 
-			 * the size of the remainder string */
+			/* if the size of the typed characters (keystr) is less than 
+			 * the size of the remainder string (array capacity - existing chars */
 			num_chars = strlen(keystr);
 			num_limit = sizeof(str) - strlen(str);
 			if (num_chars < num_limit) strcat_s(str, keystr);
@@ -108,6 +108,7 @@ void AllegroW::draw(std::vector<Entity> &_bullets, std::vector<Entity> &_bricks)
 
 void AllegroW::draw_bullet(std::vector<Entity> &_bullets)
 {
+	// No need to continue if no bullets exist
 	if (_bullets.size() > 0)
 		for (int i = 0; i < _bullets.size(); ++i)
 			al_draw_pixel(_bullets[i].coord.x, _bullets[i].coord.y,
@@ -122,7 +123,10 @@ void AllegroW::draw_brick_grid(std::vector<Entity> &_bricks)
 
 	for (int c_index = 0; c_index < col; ++c_index) {
 		for (int r_index = 0; r_index < row; ++r_index) {
-			if (_bricks[i].is_dead) continue;
+			// Need to increment before skipping this iteration or else
+			// the next loop will hold the previous index and do the same
+			// thing over and over eg. all bricks appear dead and won't draw
+			if (_bricks[i].is_dead) {++i; continue;}
 			// temp assigment
 			x = _bricks[i].coord.x,
 			y = _bricks[i].coord.y,
@@ -150,20 +154,24 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 			mouse_button_is_down = false;
 		}
 
+		// Increment heading
 		if (_bullets.size() > 0) {
-			/* Increment heading */
 			for (int i = 0; i < _bullets.size(); ++i) {
 				_bullets[i].coord.x += _bullets[i].coord.x_normal * _bullets[i].speed;
 				_bullets[i].coord.y += _bullets[i].coord.y_normal * _bullets[i].speed;
 			}
 
-			/* check if there's collision */
+			// check if there's collision
 			std::vector<Entity>::iterator brk_it = _bricks.begin();
 			std::vector<Entity>::iterator blt_it = _bullets.begin();
 			bool can_break = false;
+
 			for (int blt = 0; blt < _bullets.size(); ++blt,++blt_it) {
 
-				for (int brk = 0; brk < _bricks.size(); ++brk, ++brk_it)
+				for (int brk = 0; brk < _bricks.size(); ++brk, ++brk_it) {
+					// Always check entity dead so we don't recheck collision on it
+					if (brk_it->is_dead) continue;
+
 					if (is_colliding(_bullets[blt], _bricks[brk])) {
 						// Set to true here and check for truth at draw time
 						// ... for now?
@@ -172,9 +180,13 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 						blt_it->is_dead = true;
 
 						_bullets.erase(blt_it);
+						// No need to continue looping since we found the
+						// entities that need to be removed/hp--
 						can_break = true;
 						break;
 					}
+				}
+					
 				if (can_break) break;
 				// Reset bricks array iterator to first
 				brk_it = _bricks.begin();
