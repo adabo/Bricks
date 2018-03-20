@@ -4,6 +4,7 @@
 #include "entity.h"
 #include <iostream>
 #include <stdio.h>
+#include <math.h>
 
 AllegroW::AllegroW()
 	:	str(""),
@@ -114,7 +115,7 @@ void AllegroW::draw_bullet(std::vector<Entity> &_bullets)
 {
 	// No need to continue if no bullets exist
 	if (_bullets.size() > 0)
-		for (int i = 0; i < _bullets.size(); ++i)
+		for (float i = 0; i < _bullets.size(); ++i)
 			al_draw_pixel(_bullets[i].coord.x, _bullets[i].coord.y,
 				al_map_rgb(255, 0, 255));
 }
@@ -125,8 +126,8 @@ void AllegroW::draw_brick_grid(std::vector<Entity> &_bricks)
 	int col = 4, row = 8;
 	float x,y,w,h;
 
-	for (int c_index = 0; c_index < col; ++c_index) {
-		for (int r_index = 0; r_index < row; ++r_index) {
+	for (float c_index = 0; c_index < col; ++c_index) {
+		for (float r_index = 0; r_index < row; ++r_index) {
 			// Need to increment before skipping this iteration or else
 			// the next loop will hold the previous index and do the same
 			// thing over and over eg. all bricks appear dead and won't draw
@@ -152,7 +153,7 @@ void AllegroW::draw_edge_boundaries(std::vector<Entity> &_boundaries)
 	    sides = 4;
 		ALLEGRO_COLOR c;
 
-	for (int i = 0; i < sides; ++i) {
+	for (float i = 0; i < sides; ++i) {
 		x = _boundaries[i].coord.x;
 		y = _boundaries[i].coord.y;
 		w = _boundaries[i].dimension.width;
@@ -184,40 +185,15 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 
 		// Increment heading
 		if (_bullets.size() > 0) {
-			for (int i = 0; i < _bullets.size(); ++i) {
+			for (float i = 0; i < _bullets.size(); ++i) {
 				_bullets[i].coord.x += _bullets[i].coord.x_normal * _bullets[i].speed;
 				_bullets[i].coord.y += _bullets[i].coord.y_normal * _bullets[i].speed;
 			}
 
 			// check if there's collision
-			std::vector<Entity>::iterator brk_it = _bricks.begin();
-			std::vector<Entity>::iterator blt_it = _bullets.begin();
-			bool can_break = false;
+			handle_bullet_brick_collision(_bullets, _bricks);
+			handle_bullet_collision(_bullets, _boundaries);
 
-			for (int blt = 0; blt < _bullets.size(); ++blt,++blt_it) {
-				for (int brk = 0; brk < _bricks.size(); ++brk, ++brk_it) {
-					// Always check entity dead so we don't recheck collision on it
-					if (brk_it->is_dead) continue;
-
-					if (is_colliding(_bullets[blt], _bricks[brk])) {
-						// Set to true here and check for truth at draw time
-						// ... for now?
-						// TODO use remove_dead()
-						brk_it->is_dead = true;
-						blt_it->is_dead = true;
-
-						_bullets.erase(blt_it);
-						// No need to continue looping since we found the
-						// entities that need to be removed/hp--
-						can_break = true;
-						break;
-					}
-				}
-					
-				if (can_break) break;
-				// Reset bricks array iterator to first
-				brk_it = _bricks.begin();
-			}
 
 			// Bounce bullet.
 			// TODO Make each side of the screen an entity
@@ -231,6 +207,136 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 void AllegroW::update_brick_grid(std::vector<Entity> &_bricks)
 {
 
+}
+
+void AllegroW::handle_bullet_brick_collision(std::vector<Entity> &_bullets,
+											 std::vector<Entity> &_bricks)
+{
+	std::vector<Entity>::iterator blt_it = _bullets.begin();
+	std::vector<Entity>::iterator brk_it = _bricks.begin();
+	bool can_break = false;
+
+
+	for (float blt = 0; blt < _bullets.size(); ++blt,++blt_it) {
+		for (float brk = 0; brk < _bricks.size(); ++brk, ++brk_it) {
+			// Always check entity dead so we don't recheck collision on it
+			if (brk_it->is_dead) continue;
+
+			if (is_colliding(_bullets[blt], _bricks[brk])) {
+				// Set to true here and check for truth at draw time
+				// ... for now?
+				// TODO use remove_dead()
+				brk_it->is_dead = true;
+				blt_it->is_dead = true;
+
+				//_bullets.erase(blt_it);
+				bounce_bullet(_bullets[blt]);
+
+				// No need to continue looping since we found the
+				// entities that need to be removed/hp--
+				can_break = true;
+				break;
+			}
+		}
+			
+		if (can_break) break;
+		// Reset bricks array iterator to first
+		brk_it = _bricks.begin();
+	}
+}
+
+// Helper for checking which edge is being hit
+// TODO please move enum somewhere better
+enum SIDE { TOP, BOT, LEFT, RIGHT, NONE };
+SIDE check_top_right(Vector2D &_vec1) {
+	if (_vec1.y_normal > 0) { // Going down
+		if (_vec1.x_normal < 0) { // Going left
+			if (abs(_vec1.x_normal) <
+				abs(_vec1.y_normal)) {// Steep slope
+				// This is TOP
+				// So reverse y direction to bounce up and continue
+				// along x path
+				return TOP;
+			}
+			else {
+				// This is RIGHT
+				// So reverse the x direction because y is already
+				// going down. X just needs to bounce off the wall
+				return RIGHT;
+			}
+			return NONE;
+		}
+		return NONE;
+	}
+	return NONE;
+}
+
+SIDE check_bot_left(Vector2D &_vec1) {
+	if (_vec1.y_normal < 0) { // Going up
+		if (_vec1.x_normal > 0) { // Going right
+			if (abs(_vec1.x_normal) <
+				abs(_vec1.y_normal)) {// Steep slope
+									  // This is TOP
+									  // So reverse y direction to bounce up and continue
+									  // along x path
+				return BOT;
+			}
+			else {
+				// This is RIGHT
+				// So reverse the x direction because y is already
+				// going down. X just needs to bounce off the wall
+				return LEFT;
+			}
+			return NONE;
+		}
+		return NONE;
+	}
+	return NONE;
+}
+
+
+void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
+									   std::vector<Entity> &_edges)
+{
+	std::vector<Entity>::iterator it_bul = _bullets.begin();
+	std::vector<Entity>::iterator it_edg = _edges.begin();
+
+	// This checks for down/left direction v<
+	// TODO This mess... make it easier to read please.
+	for (float bul = 0; bul < _bullets.size(); ++it_bul, ++bul) {
+		for (float edg = 0; edg < _edges.size(); ++it_edg, ++edg) {
+			if (is_colliding(_bullets[bul], _edges[edg])) {
+				SIDE side = check_top_right(_bullets[bul].coord);
+				switch (side) {
+					case TOP:
+						_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
+						break;
+					case RIGHT:
+						_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
+						break;
+					default:
+						break;
+				}
+
+				side = check_bot_left(_bullets[bul].coord);
+				switch (side) {
+					case BOT:
+						_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
+						break;
+					case LEFT:
+						_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
+						break;
+					default:
+						break;
+				}
+
+			}
+		}
+		// The edges iterator must be reset because it will remember the last
+		// position when the for loop starts over. The out for loop remembers
+		// because it never *breaks*
+		it_edg = _edges.begin();
+	}
 }
 
 void AllegroW::spawn_entities(std::vector<Entity> &_bullets)
@@ -274,11 +380,11 @@ void AllegroW::spawn_brick_grid(std::vector<Entity> &_bricks)
 
 	_bricks.clear();
 
-	for (int brick_count = 0; brick_count < col * row; ++brick_count) {
+	for (float brick_count = 0; brick_count < col * row; ++brick_count) {
 	}
 
-	for (int c_index = 0; c_index < col; ++c_index) {
-		for (int r_index = 0; r_index < row; ++r_index) {
+	for (float c_index = 0; c_index < col; ++c_index) {
+		for (float r_index = 0; r_index < row; ++r_index) {
 			_bricks.emplace_back(Vector2D(r_index * 60, c_index * 60), Dimension(50,50),0);
 			_bricks[_bricks.size() - 1].is_dead = false;
 		}
@@ -331,7 +437,10 @@ void AllegroW::remove_dead(Entity &_entity)
 {
 
 }
-void AllegroW::bounce_bullet()
+void AllegroW::bounce_bullet(Entity &_bullet)
 {
-
+	if (_bullet.coord.x > SCREEN_WIDTH - 6 || _bullet.coord.x < 6)
+		_bullet.coord.x_normal = -_bullet.coord.x_normal;
+	if (_bullet.coord.y > SCREEN_HEIGHT - 6 || _bullet.coord.y < 6)
+		_bullet.coord.y_normal = -_bullet.coord.y_normal;
 }

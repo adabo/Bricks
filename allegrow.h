@@ -44,11 +44,15 @@ public:
 				std::vector<Entity> &_boundaries,
 				Entity &_paddle);
 	void update_brick_grid(std::vector<Entity> &_bricks);
+	void handle_bullet_brick_collision(std::vector<Entity> &_bullets,
+		                               std::vector<Entity> &_bricks);
+	void handle_bullet_collision(std::vector<Entity> &_bullets,
+								 std::vector<Entity> &_edges);
 	bool is_colliding(Entity &_ent1, Entity &_ent2);
 	void spawn_brick_grid(std::vector<Entity> &_bricks);
 	void spawn_edge_boundaries(std::vector<Entity> &_boundaries);
 	void remove_dead(Entity &_entity);
-	void bounce_bullet();
+	void bounce_bullet(Entity &_bullet);
 
 	/* Temporary members*/
 	float xt, yt;
