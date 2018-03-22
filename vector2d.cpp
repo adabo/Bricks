@@ -20,9 +20,9 @@ float Vector2D::get_distance(Vector2D &_sides)
 
 void Vector2D::normalize_length(float &_x_end, float &_y_end)
 {
+	// "end" means destination or point where vector is heading
 	Vector2D sides;
 	sides = Vector2D{_x_end, _y_end} - *this;
-	//sides = *this - Vector2D{_x_end, _y_end};
 	float distance = get_distance(sides);
 	x_normal = sides.x / distance;
 	y_normal = sides.y / distance;

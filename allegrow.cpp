@@ -248,52 +248,51 @@ void AllegroW::handle_bullet_brick_collision(std::vector<Entity> &_bullets,
 // Helper for checking which edge is being hit
 // TODO please move enum somewhere better
 enum SIDE { TOP, BOT, LEFT, RIGHT, NONE };
-SIDE check_top_right(Vector2D &_vec1) {
-	if (_vec1.y_normal > 0) { // Going down
-		if (_vec1.x_normal < 0) { // Going left
-			if (abs(_vec1.x_normal) <
-				abs(_vec1.y_normal)) {// Steep slope
-				// This is TOP
-				// So reverse y direction to bounce up and continue
-				// along x path
-				return TOP;
-			}
-			else {
-				// This is RIGHT
-				// So reverse the x direction because y is already
-				// going down. X just needs to bounce off the wall
-				return RIGHT;
-			}
-			return NONE;
-		}
-		return NONE;
-	}
-	return NONE;
+float get_bisect(Vector2D &_destination, Vector2D &_origin)
+{
+	// This returns the normalized length of the base of the triangle
+	// value between 0.0 -> 0.99...
+	Vector2D bisect = _origin;
+	bisect.normalize_length(_destination.x, _destination.y);
+
+	return abs(bisect.x_normal);
 }
 
-SIDE check_bot_left(Vector2D &_vec1) {
-	if (_vec1.y_normal < 0) { // Going up
-		if (_vec1.x_normal > 0) { // Going right
-			if (abs(_vec1.x_normal) <
-				abs(_vec1.y_normal)) {// Steep slope
-									  // This is TOP
-									  // So reverse y direction to bounce up and continue
-									  // along x path
-				return BOT;
-			}
-			else {
-				// This is RIGHT
-				// So reverse the x direction because y is already
-				// going down. X just needs to bounce off the wall
-				return LEFT;
-			}
-			return NONE;
-		}
-		return NONE;
-	}
-	return NONE;
+SIDE check_top_right(Entity &_ent1, Entity &_ent2)
+{
+	// Get vector (B) between vec1 lower left point and vec2 top right point.
+	// Then compare vec1.y_normal length to the vectorB.y_normal. If it is less
+	// then the collision happened on the top. Else the right.
+	Vector2D entity1_bot_left(_ent1.coord.x, _ent1.coord.y + _ent1.dimension.height);
+	Vector2D entity2_top_right(_ent2.coord.x + _ent2.dimension.width, _ent2.coord.y);
+
+	if (abs(_ent1.coord.x_normal) < get_bisect(entity2_top_right, entity1_bot_left))
+		return TOP;
+	else
+		return RIGHT;
 }
 
+SIDE check_bot_left(Entity &_ent1, Entity &_ent2)
+{
+	Vector2D entity1_top_right(_ent1.coord.x + _ent1.dimension.width, _ent1.coord.y);
+	Vector2D entity2_bot_left(_ent2.coord.x, _ent2.coord.y + _ent2.dimension.height);
+
+	if (abs(_ent1.coord.x_normal) < get_bisect(entity2_bot_left, entity1_top_right))
+		return BOT;
+	else
+		return LEFT;
+}
+
+SIDE get_which_side(Entity &_ent1, Entity &_ent2)
+{
+	// Going down-left
+	if (_ent1.coord.y_normal > 0 && _ent1.coord.x_normal < 0)
+		return check_top_right(_ent1, _ent2);
+	else if (_ent1.coord.y_normal < 0 && _ent1.coord.x_normal > 0) // Going up-right
+		return check_bot_left(_ent1, _ent2);
+	else
+		return NONE;
+}
 
 void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
 									   std::vector<Entity> &_edges)
@@ -306,7 +305,7 @@ void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
 	for (float bul = 0; bul < _bullets.size(); ++it_bul, ++bul) {
 		for (float edg = 0; edg < _edges.size(); ++it_edg, ++edg) {
 			if (is_colliding(_bullets[bul], _edges[edg])) {
-				SIDE side = check_top_right(_bullets[bul].coord);
+				SIDE side = get_which_side(_bullets[bul], _edges[edg]);
 				switch (side) {
 					case TOP:
 						_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
@@ -314,12 +313,6 @@ void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
 					case RIGHT:
 						_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
 						break;
-					default:
-						break;
-				}
-
-				side = check_bot_left(_bullets[bul].coord);
-				switch (side) {
 					case BOT:
 						_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
 						break;
@@ -329,7 +322,6 @@ void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
 					default:
 						break;
 				}
-
 			}
 		}
 		// The edges iterator must be reset because it will remember the last
