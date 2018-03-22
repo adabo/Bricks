@@ -159,7 +159,8 @@ void AllegroW::draw_edge_boundaries(std::vector<Entity> &_boundaries)
 		w = _boundaries[i].dimension.width;
 		h = _boundaries[i].dimension.height;
 		c = _boundaries[i].color; 
-		al_draw_filled_rectangle(x,y,x+w,y+h,c);
+		//al_draw_filled_rectangle(x,y,x+w,y+h,c);
+		al_draw_rectangle(x,y,x+w,y+h,c, 1);
 	}
 }
 /* TODO Split updates per entity. Too many arguments for main update
@@ -192,7 +193,7 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 
 			// check if there's collision
 			// First destroy the brick
-			handle_bullet_brick_collision(_bullets, _bricks);
+			//handle_bullet_brick_collision(_bullets, _bricks);
 			// then bounce off brick
 			handle_bullet_collision(_bullets, _bricks);
 			// then check and bounce on screen edges.
@@ -227,6 +228,7 @@ void AllegroW::handle_bullet_brick_collision(std::vector<Entity> &_bullets,
 			if (brk_it->is_dead) continue;
 
 			if (is_colliding(_bullets[blt], _bricks[brk])) {
+				std::cout << "Collision" << std::endl;
 				// Set to true here and check for truth at draw time
 				// ... for now?
 				// TODO use remove_dead()
@@ -234,7 +236,7 @@ void AllegroW::handle_bullet_brick_collision(std::vector<Entity> &_bullets,
 				blt_it->is_dead = true;
 
 				//_bullets.erase(blt_it);
-				bounce_bullet(_bullets[blt]);
+				//bounce_bullet(_bullets[blt]);
 
 				// No need to continue looping since we found the
 				// entities that need to be removed/hp--
@@ -287,13 +289,46 @@ SIDE check_bot_left(Entity &_ent1, Entity &_ent2)
 		return LEFT;
 }
 
+SIDE check_top_left(Entity &_ent1, Entity &_ent2)
+{
+	Vector2D entity1_bot_right(_ent1.coord.x + _ent1.dimension.width,
+							   _ent1.coord.y + _ent1.dimension.height);
+	Vector2D entity2_top_left(_ent2.coord.x, _ent2.coord.y + _ent2.dimension.height);
+
+	if (abs(_ent1.coord.x_normal) < get_bisect(entity2_top_left, entity1_bot_right))
+		return TOP;
+	else
+		return LEFT;
+}
+
+SIDE check_bot_right(Entity &_ent1, Entity &_ent2)
+{
+	Vector2D entity1_top_left(_ent1.coord.x, _ent1.coord.y);
+	Vector2D entity2_bot_right(_ent2.coord.x + _ent2.dimension.width,
+							   _ent2.coord.y + _ent2.dimension.height);
+
+	if (abs(_ent1.coord.x_normal) < get_bisect(entity2_bot_right, entity1_top_left))
+		return BOT;
+	else
+		return RIGHT;
+}
+
+
+
 SIDE get_which_side(Entity &_ent1, Entity &_ent2)
 {
 	// Going down-left
-	if (_ent1.coord.y_normal > 0 && _ent1.coord.x_normal < 0)
+	if (_ent1.coord.y_normal > 0 && _ent1.coord.x_normal < 0) // Down-left
 		return check_top_right(_ent1, _ent2);
-	else if (_ent1.coord.y_normal < 0 && _ent1.coord.x_normal > 0) // Going up-right
+	// Going up-right
+	else if (_ent1.coord.y_normal < 0 && _ent1.coord.x_normal > 0) // Up-right
 		return check_bot_left(_ent1, _ent2);
+	// Going down-right
+	else if (_ent1.coord.y_normal > 0 && _ent1.coord.x_normal > 0) // Down-right
+		return check_top_left(_ent1, _ent2);
+	// Going up-left
+	else if (_ent1.coord.y_normal < 0 && _ent1.coord.x_normal < 0) // Up-left
+		return check_bot_right(_ent1, _ent2);
 	else
 		return NONE;
 }
@@ -309,6 +344,9 @@ void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
 	for (float bul = 0; bul < _bullets.size(); ++it_bul, ++bul) {
 		for (float edg = 0; edg < _edges.size(); ++it_edg, ++edg) {
 			if (is_colliding(_bullets[bul], _edges[edg])) {
+				std::cout << "Edge collision" << std::endl;
+				_edges[edg].is_dead;
+				_bullets[bul].is_dead;
 				SIDE side = get_which_side(_bullets[bul], _edges[edg]);
 				switch (side) {
 					case TOP:
@@ -329,7 +367,7 @@ void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
 			}
 		}
 		// The edges iterator must be reset because it will remember the last
-		// position when the for loop starts over. The out for loop remembers
+		// position when the for loop starts over. The outer for loop remembers
 		// because it never *breaks*
 		it_edg = _edges.begin();
 	}
