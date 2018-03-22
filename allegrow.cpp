@@ -191,9 +191,12 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 			}
 
 			// check if there's collision
+			// First destroy the brick
 			handle_bullet_brick_collision(_bullets, _bricks);
+			// then bounce off brick
+			handle_bullet_collision(_bullets, _bricks);
+			// then check and bounce on screen edges.
 			handle_bullet_collision(_bullets, _boundaries);
-
 
 			// Bounce bullet.
 			// TODO Make each side of the screen an entity
@@ -214,6 +217,7 @@ void AllegroW::handle_bullet_brick_collision(std::vector<Entity> &_bullets,
 {
 	std::vector<Entity>::iterator blt_it = _bullets.begin();
 	std::vector<Entity>::iterator brk_it = _bricks.begin();
+
 	bool can_break = false;
 
 
