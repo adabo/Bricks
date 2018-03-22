@@ -64,6 +64,8 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 
 	switch (event.type) {
 		case ALLEGRO_EVENT_MOUSE_AXES:
+			x_mouse = event.mouse.x;
+			y_mouse = event.mouse.y;
 			break;
 		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 			x_mouse = event.mouse.x;
@@ -95,13 +97,17 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 	}
 }
 
-void AllegroW::draw(std::vector<Entity> &_bullets, std::vector<Entity> &_bricks, std::vector<Entity> &_boundaries)
+void AllegroW::draw(std::vector<Entity> &_bullets,
+					std::vector<Entity> &_bricks,
+					std::vector<Entity> &_boundaries,
+					Entity &_paddle)
 {
 	if (can_draw) {
 		al_clear_to_color(al_map_rgb(0, 0 , 0));
 		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", "Testing");
 
 		// Or draw_entity( Entity &_ent);
+		draw_paddle(_paddle);
 		draw_bullet(_bullets);
 		draw_brick_grid(_bricks);
 		draw_edge_boundaries(_boundaries);
@@ -116,8 +122,9 @@ void AllegroW::draw_bullet(std::vector<Entity> &_bullets)
 	// No need to continue if no bullets exist
 	if (_bullets.size() > 0)
 		for (float i = 0; i < _bullets.size(); ++i)
-			al_draw_pixel(_bullets[i].coord.x, _bullets[i].coord.y,
-				al_map_rgb(255, 0, 255));
+			al_draw_filled_circle(_bullets[i].coord.x, _bullets[i].coord.y, 4, al_map_rgb(255, 0, 255));
+			//al_draw_pixel(_bullets[i].coord.x, _bullets[i].coord.y,
+				//al_map_rgb(255, 0, 255));
 }
 
 void AllegroW::draw_brick_grid(std::vector<Entity> &_bricks)
@@ -163,6 +170,16 @@ void AllegroW::draw_edge_boundaries(std::vector<Entity> &_boundaries)
 		al_draw_rectangle(x,y,x+w,y+h,c, 1);
 	}
 }
+void AllegroW::draw_paddle(Entity &_paddle)
+{
+	int x = _paddle.coord.x,
+		y = _paddle.coord.y,
+		w = _paddle.dimension.width, 
+		h = _paddle.dimension.height;
+
+	al_draw_filled_rectangle(x, y, x + w, y + h,
+							 al_map_rgb(100, 100, 100));
+}
 /* TODO Split updates per entity. Too many arguments for main update
  * But how do you pass ALL the entities from game? pass the whole game object?)
  * However, we could just load up the argument list with every single entity.
@@ -175,7 +192,7 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 	if (can_update) {
 		if (mouse_button_is_down) {
 			spawn_entities(_bullets);
-			spawn_edge_boundaries(_boundaries);
+			//spawn_edge_boundaries(_boundaries);
 			mouse_button_is_down = false;
 		}
 
@@ -183,6 +200,10 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 			spawn_brick_grid(_bricks);
 			key_is_down = false;
 		}
+
+		// Move paddle
+		_paddle.coord.x = x_mouse;
+		_paddle.coord.y = y_mouse;
 
 		// Increment heading
 		if (_bullets.size() > 0) {
@@ -195,9 +216,15 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 			// First destroy the brick
 			//handle_bullet_brick_collision(_bullets, _bricks);
 			// then bounce off brick
-			handle_bullet_collision(_bullets, _bricks);
+			bool is_edge = false;
+			handle_bullet_collision(_bullets, _bricks, is_edge);
+
+			is_edge = false;
+			handle_bullet_collision(_bullets, _paddle, is_edge);
 			// then check and bounce on screen edges.
-			handle_bullet_collision(_bullets, _boundaries);
+			is_edge = true;
+			handle_bullet_collision(_bullets, _boundaries, is_edge);
+
 
 			// Bounce bullet.
 			// TODO Make each side of the screen an entity
@@ -334,20 +361,54 @@ SIDE get_which_side(Entity &_ent1, Entity &_ent2)
 }
 
 void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
-									   std::vector<Entity> &_edges)
+									   Entity &_paddle,
+									   bool _is_edge)
 {
 	std::vector<Entity>::iterator it_bul = _bullets.begin();
-	std::vector<Entity>::iterator it_edg = _edges.begin();
 
-	// This checks for down/left direction v<
-	// TODO This mess... make it easier to read please.
 	for (float bul = 0; bul < _bullets.size(); ++it_bul, ++bul) {
-		for (float edg = 0; edg < _edges.size(); ++it_edg, ++edg) {
-			if (is_colliding(_bullets[bul], _edges[edg])) {
-				std::cout << "Edge collision" << std::endl;
-				_edges[edg].is_dead;
-				_bullets[bul].is_dead;
-				SIDE side = get_which_side(_bullets[bul], _edges[edg]);
+		if (is_colliding(_bullets[bul], _paddle)) {
+			if (!_is_edge) {
+				_paddle.is_dead = true;
+				_bullets[bul].is_dead = true;
+			}
+			SIDE side = get_which_side(_bullets[bul], _paddle);
+			switch (side) {
+			case TOP:
+				_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
+				break;
+			case RIGHT:
+				_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
+				break;
+			case BOT:
+				_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
+				break;
+			case LEFT:
+				_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
+									   std::vector<Entity> &_entity,
+									   bool _is_edge)
+{
+	std::vector<Entity>::iterator it_bul = _bullets.begin();
+	std::vector<Entity>::iterator it_ent = _entity.begin();
+
+	for (float bul = 0; bul < _bullets.size(); ++it_bul, ++bul) {
+		for (float ent = 0; ent < _entity.size(); ++it_ent, ++ent) {
+			if (_entity[ent].is_dead) continue;
+			if (is_colliding(_bullets[bul], _entity[ent])) {
+				if (!_is_edge) {
+					_entity[ent].is_dead = true;
+					_bullets[bul].is_dead = true;
+				}
+				SIDE side = get_which_side(_bullets[bul], _entity[ent]);
 				switch (side) {
 					case TOP:
 						_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
@@ -366,11 +427,20 @@ void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
 				}
 			}
 		}
-		// The edges iterator must be reset because it will remember the last
+		// The entity iterator must be reset because it will remember the last
 		// position when the for loop starts over. The outer for loop remembers
 		// because it never *breaks*
-		it_edg = _edges.begin();
+		it_ent = _entity.begin();
 	}
+}
+
+void AllegroW::spawn_paddle(Entity &_paddle)
+{
+	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50);
+	Dimension new_dimension(100, 20);
+
+	//_paddle(Vector2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50), Dimension(100, 20), 4);
+	_paddle = { new_coord, new_dimension, 4 };
 }
 
 void AllegroW::spawn_entities(std::vector<Entity> &_bullets)
@@ -378,7 +448,7 @@ void AllegroW::spawn_entities(std::vector<Entity> &_bullets)
 	// Add new bullet to end of array
 	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 20);
 	Dimension new_dimension(1,1);
-	float speed = 7;
+	float speed = 2;
 	_bullets.emplace_back(new_coord, new_dimension, speed);
 
   	//Get index # of last element
@@ -438,6 +508,7 @@ void AllegroW::spawn_edge_boundaries(std::vector<Entity> &_boundaries)
 	ALLEGRO_COLOR color = al_map_rgb(216, 61, 61); // Soft red
 	_boundaries.emplace_back(Vector2D(x,y), Dimension(w, h), 0); // Top
 	_boundaries[index].color = color;
+	_boundaries[index].is_dead = false;
 	++index;
 
 	x = 20;
@@ -447,6 +518,7 @@ void AllegroW::spawn_edge_boundaries(std::vector<Entity> &_boundaries)
 	color = al_map_rgb(100, 188, 100); // Soft green
 	_boundaries.emplace_back(Vector2D(x,y), Dimension(w, h),0); // Bot
 	_boundaries[index].color = color;
+	_boundaries[index].is_dead = false;
 	++index;
 
 	x = 0;
@@ -456,6 +528,7 @@ void AllegroW::spawn_edge_boundaries(std::vector<Entity> &_boundaries)
 	color = al_map_rgb(66, 100, 190); // Soft blue
 	_boundaries.emplace_back(Vector2D(x,y), Dimension(w, h),0); // Left
 	_boundaries[index].color = color;
+	_boundaries[index].is_dead = false;
 	++index;
 
 	x = SCREEN_WIDTH - 20;
@@ -465,6 +538,7 @@ void AllegroW::spawn_edge_boundaries(std::vector<Entity> &_boundaries)
 	color = al_map_rgb(180, 167, 75); // Soft 
 	_boundaries.emplace_back(Vector2D(x,y), Dimension(w, h),0); // Right
 	_boundaries[index].color = color;
+	_boundaries[index].is_dead = false;
 }
 
 void AllegroW::remove_dead(Entity &_entity)

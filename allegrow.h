@@ -33,9 +33,12 @@ public:
 	void register_objects();
 	void start_timer();
 	void handle_events(Vector2D &_mouse, bool &_game_is_running);
-	void spawn_entities(std::vector<Entity> &_bullets);
 	void clamp_entity_to_screen(Vector2D &_entity_coord, int offset);
-	void draw(std::vector<Entity> &_bullets, std::vector<Entity> &_bricks, std::vector<Entity> &_boundaries);
+	void draw(std::vector<Entity> &_bullets,
+			  std::vector<Entity> &_bricks,
+			  std::vector<Entity> &_boundaries,
+			  Entity &_paddle);
+	void draw_paddle(Entity &_paddle);
 	void draw_bullet(std::vector<Entity> &_bullets);
 	void draw_brick_grid(std::vector<Entity> &_bricks);
 	void draw_edge_boundaries(std::vector<Entity> &_boundaries);
@@ -47,8 +50,14 @@ public:
 	void handle_bullet_brick_collision(std::vector<Entity> &_bullets,
 		                               std::vector<Entity> &_bricks);
 	void handle_bullet_collision(std::vector<Entity> &_bullets,
-								 std::vector<Entity> &_edges);
+								 std::vector<Entity> &_edges,
+								 bool _is_edge);
+	void handle_bullet_collision(std::vector<Entity> &_bullets,
+								Entity &_paddle,
+								bool _is_edge);
 	bool is_colliding(Entity &_ent1, Entity &_ent2);
+	void spawn_paddle(Entity &_paddle);
+	void spawn_entities(std::vector<Entity> &_bullets);
 	void spawn_brick_grid(std::vector<Entity> &_bricks);
 	void spawn_edge_boundaries(std::vector<Entity> &_boundaries);
 	void remove_dead(Entity &_entity);
