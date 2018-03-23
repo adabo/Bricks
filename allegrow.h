@@ -73,7 +73,12 @@ public:
 	bool can_put_text;
 	bool can_draw;
 	bool can_update;
-	bool key_is_down;
+	bool enter_key_is_down;
+	bool left_key_is_down;
+   	bool right_key_is_down;
+	bool w_key_is_down;
+   	bool d_key_is_down;
+	bool space_key_is_down;
 	bool mouse_button_is_down;
 	ALLEGRO_EVENT_QUEUE *event_queue;
 	ALLEGRO_DISPLAY *display;

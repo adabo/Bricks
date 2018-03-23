@@ -14,7 +14,7 @@ AllegroW::AllegroW()
 		can_put_text(false),
 		can_draw(false),
 		can_update(false),
-		key_is_down(false)
+		enter_key_is_down(false)
 {}
 
 AllegroW::~AllegroW() {}
@@ -74,7 +74,17 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
 			if (event.keyboard.keycode == ALLEGRO_KEY_ENTER)
-				key_is_down = true;
+				enter_key_is_down = true;
+			if (event.keyboard.keycode == ALLEGRO_KEY_LEFT)
+				left_key_is_down = true;
+			if (event.keyboard.keycode == ALLEGRO_KEY_RIGHT)
+				right_key_is_down = true;
+			if (event.keyboard.keycode == ALLEGRO_KEY_W)
+				w_key_is_down = true;
+			if (event.keyboard.keycode == ALLEGRO_KEY_D)
+				d_key_is_down = true;
+			if (event.keyboard.keycode == ALLEGRO_KEY_SPACE)
+				space_key_is_down = true;
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				_game_is_running = false;
 
@@ -85,6 +95,15 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 			num_limit = sizeof(str) - strlen(str);
 			if (num_chars < num_limit) strcat_s(str, keystr);
 			/* then append/concatenate the characters to the end of str*/
+			break;
+		case ALLEGRO_EVENT_KEY_UP:
+			if (event.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+				left_key_is_down = false;
+			}
+			if (event.keyboard.keycode == ALLEGRO_KEY_RIGHT)
+				right_key_is_down = false;
+			if (event.keyboard.keycode == ALLEGRO_KEY_SPACE)
+				space_key_is_down = false;
 			break;
 		case ALLEGRO_EVENT_TIMER:
 			if (al_is_event_queue_empty(event_queue)) {
@@ -194,20 +213,31 @@ void AllegroW::update(std::vector<Entity> &_balls,
 					  Entity &_paddle)
 {
 	if (can_update) {
-		if (mouse_button_is_down) {
+		if (mouse_button_is_down || space_key_is_down) {
 			spawn_entities(_balls);
 			//spawn_edge_boundaries(_boundaries);
 			mouse_button_is_down = false;
+			space_key_is_down = false;
 		}
 
-		if (key_is_down) {
+		if (enter_key_is_down) {
 			spawn_brick_grid(_bricks);
-			key_is_down = false;
+			enter_key_is_down = false;
 		}
 
 		// Move paddle
-		_paddle.coord.x = x_mouse - _paddle.dimension.width / 2;
-		_paddle.coord.y = y_mouse - _paddle.dimension.height / 2;
+		// by mouse
+		//_paddle.coord.x = x_mouse - _paddle.dimension.width / 2;
+		//_paddle.coord.y = y_mouse - _paddle.dimension.height / 2;
+		
+		// Move paddle
+		// by keyboard
+		if (left_key_is_down) {
+			_paddle.coord.x -= _paddle.speed; 
+		}
+		else if (right_key_is_down) {
+			_paddle.coord.x += _paddle.speed; 
+		}
 
 		// Increment heading
 		if (_balls.size() > 0) {
@@ -447,7 +477,7 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 
 void AllegroW::spawn_paddle(Entity &_paddle)
 {
-	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50);
+	Vector2D new_coord(SCREEN_WIDTH / 2 - 50, SCREEN_HEIGHT - 50);
 	Dimension new_dimension(100, 20);
 
 	//_paddle(Vector2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50), Dimension(100, 20), 4);
@@ -457,7 +487,7 @@ void AllegroW::spawn_paddle(Entity &_paddle)
 void AllegroW::spawn_entities(std::vector<Entity> &_balls)
 {
 	// Add new ball to end of array
-	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 40);
+	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 60);
 	Dimension new_dimension(8,8);
 	float speed = 5;
 	_balls.emplace_back(new_coord, new_dimension, speed);
