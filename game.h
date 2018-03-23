@@ -19,7 +19,7 @@ public:
 	//Vector2D mouse;
 	//Vector2D line;
 	bool game_is_running;
-	std::vector<Entity> bullets;
+	std::vector<Entity> balls;
 	std::vector<Entity> bricks;
 	std::vector<Entity> boundaries;
 	Entity paddle;

@@ -22,8 +22,8 @@ void Game::go()
 
 	while (game_is_running) {
 		allegrow.handle_events(paddle.coord, game_is_running);
-		allegrow.update(bullets, bricks, boundaries, paddle);
-		allegrow.draw(bullets, bricks, boundaries, paddle);
+		allegrow.update(balls, bricks, boundaries, paddle);
+		allegrow.draw(balls, bricks, boundaries, paddle);
 	}
 
 	//sys_pause();

@@ -97,7 +97,7 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 	}
 }
 
-void AllegroW::draw(std::vector<Entity> &_bullets,
+void AllegroW::draw(std::vector<Entity> &_balls,
 					std::vector<Entity> &_bricks,
 					std::vector<Entity> &_boundaries,
 					Entity &_paddle)
@@ -108,7 +108,7 @@ void AllegroW::draw(std::vector<Entity> &_bullets,
 
 		// Or draw_entity( Entity &_ent);
 		draw_paddle(_paddle);
-		draw_bullet(_bullets);
+		draw_ball(_balls);
 		draw_brick_grid(_bricks);
 		draw_edge_boundaries(_boundaries);
 
@@ -117,13 +117,15 @@ void AllegroW::draw(std::vector<Entity> &_bullets,
 	}
 }
 
-void AllegroW::draw_bullet(std::vector<Entity> &_bullets)
+void AllegroW::draw_ball(std::vector<Entity> &_balls)
 {
-	// No need to continue if no bullets exist
-	if (_bullets.size() > 0)
-		for (float i = 0; i < _bullets.size(); ++i)
-			al_draw_filled_circle(_bullets[i].coord.x, _bullets[i].coord.y, 4, al_map_rgb(255, 0, 255));
-			//al_draw_pixel(_bullets[i].coord.x, _bullets[i].coord.y,
+	// No need to continue if no balls exist
+	if (_balls.size() > 0)
+		for (float i = 0; i < _balls.size(); ++i)
+			al_draw_filled_circle(_balls[i].coord.x + 4,
+								  _balls[i].coord.y + 4,
+								  4, al_map_rgb(255, 0, 255));
+			//al_draw_pixel(_balls[i].coord.x, _balls[i].coord.y,
 				//al_map_rgb(255, 0, 255));
 }
 
@@ -151,6 +153,7 @@ void AllegroW::draw_brick_grid(std::vector<Entity> &_bricks)
 		}
 	}
 }
+
 void AllegroW::draw_edge_boundaries(std::vector<Entity> &_boundaries)
 {
 	int x,
@@ -170,6 +173,7 @@ void AllegroW::draw_edge_boundaries(std::vector<Entity> &_boundaries)
 		al_draw_rectangle(x,y,x+w,y+h,c, 1);
 	}
 }
+
 void AllegroW::draw_paddle(Entity &_paddle)
 {
 	int x = _paddle.coord.x,
@@ -184,14 +188,14 @@ void AllegroW::draw_paddle(Entity &_paddle)
  * But how do you pass ALL the entities from game? pass the whole game object?)
  * However, we could just load up the argument list with every single entity.
  * But how do you compare collision for EVERY entity against EVERY entity?*/
-void AllegroW::update(std::vector<Entity> &_bullets,
+void AllegroW::update(std::vector<Entity> &_balls,
 					  std::vector<Entity> &_bricks,
 					  std::vector<Entity> &_boundaries,
 					  Entity &_paddle)
 {
 	if (can_update) {
 		if (mouse_button_is_down) {
-			spawn_entities(_bullets);
+			spawn_entities(_balls);
 			//spawn_edge_boundaries(_boundaries);
 			mouse_button_is_down = false;
 		}
@@ -202,31 +206,31 @@ void AllegroW::update(std::vector<Entity> &_bullets,
 		}
 
 		// Move paddle
-		_paddle.coord.x = x_mouse;
-		_paddle.coord.y = y_mouse;
+		_paddle.coord.x = x_mouse - _paddle.dimension.width / 2;
+		_paddle.coord.y = y_mouse - _paddle.dimension.height / 2;
 
 		// Increment heading
-		if (_bullets.size() > 0) {
-			for (float i = 0; i < _bullets.size(); ++i) {
-				_bullets[i].coord.x += _bullets[i].coord.x_normal * _bullets[i].speed;
-				_bullets[i].coord.y += _bullets[i].coord.y_normal * _bullets[i].speed;
+		if (_balls.size() > 0) {
+			for (float i = 0; i < _balls.size(); ++i) {
+				_balls[i].coord.x += _balls[i].coord.x_normal * _balls[i].speed;
+				_balls[i].coord.y += _balls[i].coord.y_normal * _balls[i].speed;
 			}
 
 			// check if there's collision
 			// First destroy the brick
-			//handle_bullet_brick_collision(_bullets, _bricks);
+			//handle_ball_brick_collision(_balls, _bricks);
 			// then bounce off brick
 			bool is_edge = false;
-			handle_bullet_collision(_bullets, _bricks, is_edge);
+			handle_ball_collision(_balls, _bricks, is_edge);
 
 			is_edge = false;
-			handle_bullet_collision(_bullets, _paddle, is_edge);
+			handle_ball_collision(_balls, _paddle, is_edge);
 			// then check and bounce on screen edges.
 			is_edge = true;
-			handle_bullet_collision(_bullets, _boundaries, is_edge);
+			handle_ball_collision(_balls, _boundaries, is_edge);
 
 
-			// Bounce bullet.
+			// Bounce ball.
 			// TODO Make each side of the screen an entity
 
 		}
@@ -240,21 +244,21 @@ void AllegroW::update_brick_grid(std::vector<Entity> &_bricks)
 
 }
 
-void AllegroW::handle_bullet_brick_collision(std::vector<Entity> &_bullets,
+void AllegroW::handle_ball_brick_collision(std::vector<Entity> &_balls,
 											 std::vector<Entity> &_bricks)
 {
-	std::vector<Entity>::iterator blt_it = _bullets.begin();
+	std::vector<Entity>::iterator blt_it = _balls.begin();
 	std::vector<Entity>::iterator brk_it = _bricks.begin();
 
 	bool can_break = false;
 
 
-	for (float blt = 0; blt < _bullets.size(); ++blt,++blt_it) {
+	for (float blt = 0; blt < _balls.size(); ++blt,++blt_it) {
 		for (float brk = 0; brk < _bricks.size(); ++brk, ++brk_it) {
 			// Always check entity dead so we don't recheck collision on it
 			if (brk_it->is_dead) continue;
 
-			if (is_colliding(_bullets[blt], _bricks[brk])) {
+			if (is_colliding(_balls[blt], _bricks[brk])) {
 				std::cout << "Collision" << std::endl;
 				// Set to true here and check for truth at draw time
 				// ... for now?
@@ -262,8 +266,8 @@ void AllegroW::handle_bullet_brick_collision(std::vector<Entity> &_bullets,
 				brk_it->is_dead = true;
 				blt_it->is_dead = true;
 
-				//_bullets.erase(blt_it);
-				//bounce_bullet(_bullets[blt]);
+				//_balls.erase(blt_it);
+				//bounce_ball(_balls[blt]);
 
 				// No need to continue looping since we found the
 				// entities that need to be removed/hp--
@@ -340,8 +344,6 @@ SIDE check_bot_right(Entity &_ent1, Entity &_ent2)
 		return RIGHT;
 }
 
-
-
 SIDE get_which_side(Entity &_ent1, Entity &_ent2)
 {
 	// Going down-left
@@ -360,31 +362,36 @@ SIDE get_which_side(Entity &_ent1, Entity &_ent2)
 		return NONE;
 }
 
-void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
+void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 									   Entity &_paddle,
 									   bool _is_edge)
 {
-	std::vector<Entity>::iterator it_bul = _bullets.begin();
+	std::vector<Entity>::iterator it_bul = _balls.begin();
 
-	for (float bul = 0; bul < _bullets.size(); ++it_bul, ++bul) {
-		if (is_colliding(_bullets[bul], _paddle)) {
+	for (float bul = 0; bul < _balls.size(); ++it_bul, ++bul) {
+		if (is_colliding(_balls[bul], _paddle)) {
 			if (!_is_edge) {
 				_paddle.is_dead = true;
-				_bullets[bul].is_dead = true;
+				_balls[bul].is_dead = true;
 			}
-			SIDE side = get_which_side(_bullets[bul], _paddle);
+			SIDE side = get_which_side(_balls[bul], _paddle);
 			switch (side) {
 			case TOP:
-				_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
+				//y -= y - top
+				_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
+				_balls[bul].coord.y -= (_balls[bul].coord.y + _balls[bul].dimension.height) - _paddle.coord.y;
 				break;
 			case RIGHT:
-				_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
+				_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
+				_balls[bul].coord.x -= _balls[bul].coord.x - (_paddle.coord.x + _paddle.dimension.width);
 				break;
 			case BOT:
-				_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
+				_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
+				_balls[bul].coord.y -= _balls[bul].coord.y - (_paddle.coord.y + _paddle.dimension.height);
 				break;
 			case LEFT:
-				_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
+				_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
+				_balls[bul].coord.x -= (_balls[bul].coord.x + _balls[bul].dimension.width) - _paddle.coord.x;
 				break;
 			default:
 				break;
@@ -393,34 +400,38 @@ void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
 	}
 }
 
-void AllegroW::handle_bullet_collision(std::vector<Entity> &_bullets,
+void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 									   std::vector<Entity> &_entity,
 									   bool _is_edge)
 {
-	std::vector<Entity>::iterator it_bul = _bullets.begin();
+	std::vector<Entity>::iterator it_bul = _balls.begin();
 	std::vector<Entity>::iterator it_ent = _entity.begin();
 
-	for (float bul = 0; bul < _bullets.size(); ++it_bul, ++bul) {
+	for (float bul = 0; bul < _balls.size(); ++it_bul, ++bul) {
 		for (float ent = 0; ent < _entity.size(); ++it_ent, ++ent) {
 			if (_entity[ent].is_dead) continue;
-			if (is_colliding(_bullets[bul], _entity[ent])) {
+			if (is_colliding(_balls[bul], _entity[ent])) {
 				if (!_is_edge) {
 					_entity[ent].is_dead = true;
-					_bullets[bul].is_dead = true;
+					_balls[bul].is_dead = true;
 				}
-				SIDE side = get_which_side(_bullets[bul], _entity[ent]);
+				SIDE side = get_which_side(_balls[bul], _entity[ent]);
 				switch (side) {
 					case TOP:
-						_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
+						_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
+						_balls[bul].coord.y -= (_balls[bul].coord.y + _balls[bul].dimension.height) - _entity[ent].coord.y;
 						break;
 					case RIGHT:
-						_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
+						_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
+						_balls[bul].coord.x -= _balls[bul].coord.x - (_entity[ent].coord.x + _entity[ent].dimension.width);
 						break;
 					case BOT:
-						_bullets[bul].coord.y_normal = -_bullets[bul].coord.y_normal;
+						_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
+						_balls[bul].coord.y -= _balls[bul].coord.y - (_entity[ent].coord.y + _entity[ent].dimension.height);
 						break;
 					case LEFT:
-						_bullets[bul].coord.x_normal = -_bullets[bul].coord.x_normal;
+						_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
+						_balls[bul].coord.x -= (_balls[bul].coord.x + _balls[bul].dimension.width) - _entity[ent].coord.x;
 						break;
 					default:
 						break;
@@ -443,24 +454,24 @@ void AllegroW::spawn_paddle(Entity &_paddle)
 	_paddle = { new_coord, new_dimension, 4 };
 }
 
-void AllegroW::spawn_entities(std::vector<Entity> &_bullets)
+void AllegroW::spawn_entities(std::vector<Entity> &_balls)
 {
-	// Add new bullet to end of array
-	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 20);
-	Dimension new_dimension(1,1);
-	float speed = 2;
-	_bullets.emplace_back(new_coord, new_dimension, speed);
+	// Add new ball to end of array
+	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 40);
+	Dimension new_dimension(8,8);
+	float speed = 5;
+	_balls.emplace_back(new_coord, new_dimension, speed);
 
   	//Get index # of last element
-	int index = _bullets.size() - 1;
+	int index = _balls.size() - 1;
 
 	// Set dimension of top,bot,left, right
-	//_bullets[index].set_sides();
+	//_balls[index].set_sides();
 
 	// Normalize the vector
 	float x = x_mouse;
 	float y = y_mouse;
-	_bullets[index].coord.normalize_length(x, y);
+	_balls[index].coord.normalize_length(x, y);
 }
 
 void AllegroW::clamp_entity_to_screen(Vector2D &_entity_coord, int offset)
@@ -545,10 +556,11 @@ void AllegroW::remove_dead(Entity &_entity)
 {
 
 }
-void AllegroW::bounce_bullet(Entity &_bullet)
+
+void AllegroW::bounce_ball(Entity &_ball)
 {
-	if (_bullet.coord.x > SCREEN_WIDTH - 6 || _bullet.coord.x < 6)
-		_bullet.coord.x_normal = -_bullet.coord.x_normal;
-	if (_bullet.coord.y > SCREEN_HEIGHT - 6 || _bullet.coord.y < 6)
-		_bullet.coord.y_normal = -_bullet.coord.y_normal;
+	if (_ball.coord.x > SCREEN_WIDTH - 6 || _ball.coord.x < 6)
+		_ball.coord.x_normal = -_ball.coord.x_normal;
+	if (_ball.coord.y > SCREEN_HEIGHT - 6 || _ball.coord.y < 6)
+		_ball.coord.y_normal = -_ball.coord.y_normal;
 }
