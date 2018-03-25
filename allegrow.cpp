@@ -232,10 +232,10 @@ void AllegroW::update(std::vector<Entity> &_balls,
 		
 		// Move paddle
 		// by keyboard
-		if (left_key_is_down) {
+		if (left_key_is_down || w_key_is_down) {
 			_paddle.coord.x -= _paddle.speed; 
 		}
-		else if (right_key_is_down) {
+		else if (right_key_is_down || d_key_is_down) {
 			_paddle.coord.x += _paddle.speed; 
 		}
 
@@ -377,19 +377,28 @@ SIDE check_bot_right(Entity &_ent1, Entity &_ent2)
 SIDE get_which_side(Entity &_ent1, Entity &_ent2)
 {
 	// Going down-left
-	if (_ent1.coord.y_normal > 0 && _ent1.coord.x_normal < 0) // Down-left
+	if (_ent1.coord.y_normal > 0 && _ent1.coord.x_normal <= 0) // Down-left
 		return check_top_right(_ent1, _ent2);
 	// Going up-right
-	else if (_ent1.coord.y_normal < 0 && _ent1.coord.x_normal > 0) // Up-right
+	else if (_ent1.coord.y_normal < 0 && _ent1.coord.x_normal >= 0) // Up-right
 		return check_bot_left(_ent1, _ent2);
 	// Going down-right
-	else if (_ent1.coord.y_normal > 0 && _ent1.coord.x_normal > 0) // Down-right
+	else if (_ent1.coord.y_normal > 0 && _ent1.coord.x_normal >= 0) // Down-right
 		return check_top_left(_ent1, _ent2);
 	// Going up-left
-	else if (_ent1.coord.y_normal < 0 && _ent1.coord.x_normal < 0) // Up-left
+	else if (_ent1.coord.y_normal < 0 && _ent1.coord.x_normal <= 0) // Up-left
 		return check_bot_right(_ent1, _ent2);
 	else
 		return NONE;
+}
+
+
+float get_sin(float &_cos)
+{
+	float sin = 0;
+	float hyp = 1;
+	sin = sqrt(hyp * hyp - _cos * _cos);
+	return sin;
 }
 
 void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
@@ -405,10 +414,35 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 				_balls[bul].is_dead = true;
 			}
 			SIDE side = get_which_side(_balls[bul], _paddle);
+			float paddle_half_width = _paddle.dimension.width / 2;
 			switch (side) {
 			case TOP:
-				//y -= y - top
-				_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
+				// To make the paddle collision like arkanoid, the x axis
+				// needs to be altered slightly depending on the position the
+				// ball collides with the paddle.
+				if (_balls[bul].coord.x < _paddle.coord.x + paddle_half_width) {
+					float distance = _paddle.coord.x - _balls[bul].coord.x;
+					float half_pos = paddle_half_width + distance;
+					float new_heading = half_pos / paddle_half_width;
+
+					_balls[bul].coord.x_normal = -new_heading;
+					_balls[bul].coord.y_normal = -get_sin(new_heading);
+				}
+				else if (_balls[bul].coord.x > _paddle.coord.x + paddle_half_width) {
+					float distance = (_paddle.coord.x + _paddle.dimension.width) -
+									 (_balls[bul].coord.x + _balls[bul].dimension.width);
+					float half_pos = paddle_half_width - abs(distance);
+					float new_heading = half_pos / paddle_half_width;
+
+					_balls[bul].coord.x_normal = new_heading;
+					_balls[bul].coord.y_normal = -get_sin(new_heading);
+				}
+
+				//_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
+				// Move ball back outside of the object it collided with because a collision
+				// means that some part of the ball is *inside* of the object. This formula
+				// puts the ball back outside of the object so that it does infinitely loop
+				// stuck insdie of the object.
 				_balls[bul].coord.y -= (_balls[bul].coord.y + _balls[bul].dimension.height) - _paddle.coord.y;
 				break;
 			case RIGHT:
@@ -438,6 +472,7 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 	std::vector<Entity>::iterator it_ent = _entity.begin();
 
 	for (float bul = 0; bul < _balls.size(); ++it_bul, ++bul) {
+		bool can_break = false;
 		for (float ent = 0; ent < _entity.size(); ++it_ent, ++ent) {
 			if (_entity[ent].is_dead) continue;
 			if (is_colliding(_balls[bul], _entity[ent])) {
@@ -450,24 +485,30 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 					case TOP:
 						_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
 						_balls[bul].coord.y -= (_balls[bul].coord.y + _balls[bul].dimension.height) - _entity[ent].coord.y;
+						can_break = true;
 						break;
 					case RIGHT:
 						_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
 						_balls[bul].coord.x -= _balls[bul].coord.x - (_entity[ent].coord.x + _entity[ent].dimension.width);
+						can_break = true;
 						break;
 					case BOT:
 						_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
 						_balls[bul].coord.y -= _balls[bul].coord.y - (_entity[ent].coord.y + _entity[ent].dimension.height);
+						can_break = true;
 						break;
 					case LEFT:
 						_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
 						_balls[bul].coord.x -= (_balls[bul].coord.x + _balls[bul].dimension.width) - _entity[ent].coord.x;
+						can_break = true;
 						break;
 					default:
 						break;
 				}
 			}
+			if (can_break) break;
 		}
+		can_break = false;
 		// The entity iterator must be reset because it will remember the last
 		// position when the for loop starts over. The outer for loop remembers
 		// because it never *breaks*
