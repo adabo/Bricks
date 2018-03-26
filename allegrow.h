@@ -43,11 +43,12 @@ public:
 	void draw_ball(std::vector<Entity> &_balls);
 	void draw_brick_grid(std::vector<Entity> &_bricks);
 	void draw_edge_boundaries(std::vector<Entity> &_boundaries);
+	void draw_win();
+	void draw_lose();
 	void update(std::vector<Entity> &_balls,
 				std::vector<Entity> &_bricks,
 				std::vector<Entity> &_boundaries,
 				Entity &_paddle);
-	void update_brick_grid(std::vector<Entity> &_bricks);
 	void handle_ball_collision(std::vector<Entity> &_balls,
 							   std::vector<Entity> &_edges,
 							   bool _is_edge);
@@ -63,6 +64,8 @@ public:
 	void bounce_ball(Entity &_ball);
 	bool player_did_win(std::vector<Entity> &_bricks);
 	bool player_did_lose(std::vector<Entity> &_edges);
+	void check_victory_conditions(std::vector<Entity> &_bricks,
+								  std::vector<Entity> &_edges);
 
 	/* Temporary members*/
 	float xt, yt;
@@ -74,11 +77,15 @@ public:
 	bool can_put_text;
 	bool can_draw;
 	bool can_update;
+	bool can_show_win_screen;
+	bool can_show_lose_screen;
 	bool enter_key_is_down;
 	bool left_key_is_down;
    	bool right_key_is_down;
-	bool w_key_is_down;
+	bool a_key_is_down;
    	bool d_key_is_down;
+	bool w_key_is_down;
+	bool backspace_key_is_down;
 	bool space_key_is_down;
 	bool mouse_button_is_down;
 	bool &game_is_running;

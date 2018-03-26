@@ -7,14 +7,22 @@
 #include <math.h>
 
 AllegroW::AllegroW(bool &_game_is_running)
-	:	game_is_running(_game_is_running),
-	    str(""),
+	: game_is_running(_game_is_running),
+		str(""),
 		keystr(""),
 		xt(1),
 		yt(1),
 		can_put_text(false),
 		can_draw(false),
 		can_update(false),
+		can_show_win_screen(false),
+		can_show_lose_screen(false),
+		a_key_is_down(false),
+		d_key_is_down(false),
+		w_key_is_down(false),
+		backspace_key_is_down(false),
+		space_key_is_down(false),
+		mouse_button_is_down(false),
 		enter_key_is_down(false)
 {
 	_game_is_running = true;
@@ -79,6 +87,9 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 			y_mouse = event.mouse.y;
 			mouse_button_is_down = true;
 			break;
+		case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
+			mouse_button_is_down = false;
+			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
 			if (event.keyboard.keycode == ALLEGRO_KEY_ENTER)
 				enter_key_is_down = true;
@@ -88,10 +99,14 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 				right_key_is_down = true;
 			if (event.keyboard.keycode == ALLEGRO_KEY_W)
 				w_key_is_down = true;
+			if (event.keyboard.keycode == ALLEGRO_KEY_A)
+				a_key_is_down = true;
 			if (event.keyboard.keycode == ALLEGRO_KEY_D)
 				d_key_is_down = true;
 			if (event.keyboard.keycode == ALLEGRO_KEY_SPACE)
 				space_key_is_down = true;
+			if (event.keyboard.keycode == ALLEGRO_KEY_BACKSPACE)
+				backspace_key_is_down = true;
 			if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				_game_is_running = false;
 
@@ -104,11 +119,18 @@ void AllegroW::handle_events(Vector2D &_mouse, bool &_game_is_running)
 			/* then append/concatenate the characters to the end of str*/
 			break;
 		case ALLEGRO_EVENT_KEY_UP:
-			if (event.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+			if (event.keyboard.keycode == ALLEGRO_KEY_LEFT)
 				left_key_is_down = false;
-			}
 			if (event.keyboard.keycode == ALLEGRO_KEY_RIGHT)
 				right_key_is_down = false;
+			if (event.keyboard.keycode == ALLEGRO_KEY_A)
+				a_key_is_down = false;
+			if (event.keyboard.keycode == ALLEGRO_KEY_D)
+				d_key_is_down = false;
+			if (event.keyboard.keycode == ALLEGRO_KEY_W)
+				w_key_is_down = false;
+			if (event.keyboard.keycode == ALLEGRO_KEY_BACKSPACE)
+				backspace_key_is_down = false;
 			if (event.keyboard.keycode == ALLEGRO_KEY_SPACE)
 				space_key_is_down = false;
 			break;
@@ -130,16 +152,22 @@ void AllegroW::draw(std::vector<Entity> &_balls,
 {
 	if (can_draw) {
 		al_clear_to_color(al_map_rgb(0, 0 , 0));
-		al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", "Testing");
 
-		// Or draw_entity( Entity &_ent);
-		draw_paddle(_paddle);
-		draw_ball(_balls);
-		draw_brick_grid(_bricks);
-		draw_edge_boundaries(_boundaries);
-
+		if 		(can_show_win_screen) draw_win();
+		else if (can_show_lose_screen) draw_lose();
+		else {
+			al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", "Testing");
+			draw_paddle(_paddle);
+			draw_ball(_balls);
+			draw_brick_grid(_bricks);
+			draw_edge_boundaries(_boundaries);
+		}
+	
 		al_flip_display();
 		can_draw = false;
+		// Or draw_entity( Entity &_ent);
+		// Because this should only be draw_entity and draw_entities
+		// or draw_entity(std:vector<Entity> &_ents) or draw_entity(Entity &ent)
 	}
 }
 
@@ -203,6 +231,14 @@ void AllegroW::draw_paddle(Entity &_paddle)
 	al_draw_filled_rectangle(x, y, x + w, y + h,
 							 al_map_rgb(100, 100, 100));
 }
+void AllegroW::draw_win()
+{
+	al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", "Win");
+}
+void AllegroW::draw_lose()
+{
+	al_draw_textf(font, al_map_rgb(0, 255, 0), xt, yt, 0, "%s", "Lose");
+}
 /* TODO Split updates per entity. Too many arguments for main update
  * But how do you pass ALL the entities from game? pass the whole game object?)
  * However, we could just load up the argument list with every single entity.
@@ -224,14 +260,23 @@ void AllegroW::update(std::vector<Entity> &_balls,
 			enter_key_is_down = false;
 		}
 
+		if (backspace_key_is_down) {
+			can_show_lose_screen = false;
+			can_show_win_screen = false;
+			spawn_brick_grid(_bricks);
+			spawn_edge_boundaries(_boundaries);
+			_balls.clear();
+			backspace_key_is_down = false;
+		}
+
 		// Move paddle
 		// by mouse
 		//_paddle.coord.x = x_mouse - _paddle.dimension.width / 2;
 		//_paddle.coord.y = y_mouse - _paddle.dimension.height / 2;
-		
+
 		// Move paddle
 		// by keyboard
-		if (left_key_is_down || w_key_is_down) {
+		if (left_key_is_down || a_key_is_down) {
 			_paddle.coord.x -= _paddle.speed; 
 		}
 		else if (right_key_is_down || d_key_is_down) {
@@ -258,6 +303,7 @@ void AllegroW::update(std::vector<Entity> &_balls,
 			is_edge = true;
 			handle_ball_collision(_balls, _boundaries, is_edge);
 
+			check_victory_conditions(_bricks, _boundaries);
 
 			// Bounce ball.
 			// TODO Make each side of the screen an entity
@@ -266,11 +312,6 @@ void AllegroW::update(std::vector<Entity> &_balls,
 
 	}
 	can_update = false;
-}
-
-void AllegroW::update_brick_grid(std::vector<Entity> &_bricks)
-{
-
 }
 
 // Helper for checking which edge is being hit
@@ -370,12 +411,12 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 
 	for (float bal = 0; bal < _balls.size(); ++it_bal, ++bal) {
 		if (is_colliding(_balls[bal], _paddle)) {
-			if (!_is_edge) {
-				_paddle.is_dead = true;
-				_balls[bal].is_dead = true;
-			}
+			_paddle.is_dead = true;
+			_balls[bal].is_dead = true;
+
 			SIDE side = get_which_side(_balls[bal], _paddle);
 			float paddle_half_width = _paddle.dimension.width / 2;
+
 			switch (side) {
 			case TOP:
 				// To make the paddle collision like arkanoid, the x axis
@@ -434,15 +475,17 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 
 	for (float bal = 0; bal < _balls.size(); ++it_bal, ++bal) {
 		bool can_break = false;
+
 		for (float ent = 0; ent < _entity.size(); ++it_ent, ++ent) {
 			if (_entity[ent].is_dead) continue;
 
 			if (is_colliding(_balls[bal], _entity[ent])) {
-				if (!_is_edge) {
-					_entity[ent].is_dead = true;
-					_balls[bal].is_dead = true;
-				}
-				else if (player_did_lose(_entity)) game_is_running = false;
+				if (_is_edge)
+					int a = 0;
+				// Don't mark edges dead because then they will still be
+				// drawn, but not updated, hence no more collision with edges
+				_entity[ent].is_dead = true;
+				_balls[bal].is_dead = true;
 
 				SIDE side = get_which_side(_balls[bal], _entity[ent]);
 
@@ -473,8 +516,10 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 						break;
 				}
 			}
+
 			if (can_break) break;
 		}
+
 		can_break = false;
 		// The entity iterator must be reset because it will remember the last
 		// position when the for loop starts over. The outer for loop remembers
@@ -498,6 +543,7 @@ void AllegroW::spawn_entities(std::vector<Entity> &_balls)
 	Vector2D new_coord(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 60);
 	Dimension new_dimension(8,8);
 	float speed = 5;
+
 	_balls.emplace_back(new_coord, new_dimension, speed);
 
   	//Get index # of last element
@@ -509,6 +555,7 @@ void AllegroW::spawn_entities(std::vector<Entity> &_balls)
 	// Normalize the vector
 	float x = x_mouse;
 	float y = y_mouse;
+
 	_balls[index].coord.normalize_length(x, y);
 }
 
@@ -524,6 +571,7 @@ bool AllegroW::is_colliding(Entity &_ent1, Entity &_ent2)
 {
 	_ent1.set_sides();
 	_ent2.set_sides();
+
 	return _ent1 > _ent2;
 }
 
@@ -631,8 +679,31 @@ bool AllegroW::player_did_win(std::vector<Entity> &_bricks)
 
 bool AllegroW::player_did_lose(std::vector<Entity> &_edges)
 {
-	// For now, the third index is the bottom edge, so we don't
+	// For now, the second index is the bottom edge, so we don't
 	// need to loop through all four. But might need to later when
 	// add new entities to game.
-	return _edges[2].is_dead;
+	bool is_over = false;
+
+	for (int i = 0; i < _edges.size(); ++i) {
+		if (i == 1) {
+			if (_edges[i].is_dead) {
+				is_over = true;
+				break;
+			}
+		}
+		
+		// Always reset edges to alive so that the draw function
+		// doesn't skip it. Probably need to add new variable just
+		// monitor collision with edges instead of relying on is_dead
+		_edges[i].is_dead = false;
+	}
+
+	return is_over;
+}
+
+void AllegroW::check_victory_conditions(std::vector<Entity> &_bricks,
+										std::vector<Entity> &_edges)
+{
+	if      (player_did_win(_bricks)) can_show_win_screen = true;
+	else if (player_did_lose(_edges)) can_show_lose_screen = true;
 }
