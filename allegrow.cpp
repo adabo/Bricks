@@ -150,26 +150,19 @@ void AllegroW::draw_ball(std::vector<Entity> &_balls)
 
 void AllegroW::draw_brick_grid(std::vector<Entity> &_bricks)
 {
-	int i = 0;
-	int col = 4, row = 8;
-	float x,y,w,h;
+	float x,y,
+		  w = _bricks[0].dimension.width,
+		  h = _bricks[0].dimension.height;
 
-	for (float c_index = 0; c_index < col; ++c_index) {
-		for (float r_index = 0; r_index < row; ++r_index) {
-			// Need to increment before skipping this iteration or else
-			// the next loop will hold the previous index and do the same
-			// thing over and over eg. all bricks appear dead and won't draw
-			if (_bricks[i].is_dead) {++i; continue;}
+	for (float i = 0; i < _bricks.size(); ++i) {
+		if (_bricks[i].is_dead) continue;
+
 			// temp assigment
-			x = _bricks[i].coord.x,
-			y = _bricks[i].coord.y,
-		  	w = _bricks[i].dimension.width, 
-	  		h = _bricks[i].dimension.height;
+			x = _bricks[i].coord.x;
+			y = _bricks[i].coord.y;
 
 			al_draw_filled_rectangle(x, y, x + w, y + h,
 									 al_map_rgb(100, 100, 100));
-			++i;
-		}
 	}
 }
 
@@ -215,7 +208,6 @@ void AllegroW::update(std::vector<Entity> &_balls,
 	if (can_update) {
 		if (mouse_button_is_down || space_key_is_down) {
 			spawn_entities(_balls);
-			//spawn_edge_boundaries(_boundaries);
 			mouse_button_is_down = false;
 			space_key_is_down = false;
 		}
@@ -405,57 +397,57 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 									   Entity &_paddle,
 									   bool _is_edge)
 {
-	std::vector<Entity>::iterator it_bul = _balls.begin();
+	std::vector<Entity>::iterator it_bal = _balls.begin();
 
-	for (float bul = 0; bul < _balls.size(); ++it_bul, ++bul) {
-		if (is_colliding(_balls[bul], _paddle)) {
+	for (float bal = 0; bal < _balls.size(); ++it_bal, ++bal) {
+		if (is_colliding(_balls[bal], _paddle)) {
 			if (!_is_edge) {
 				_paddle.is_dead = true;
-				_balls[bul].is_dead = true;
+				_balls[bal].is_dead = true;
 			}
-			SIDE side = get_which_side(_balls[bul], _paddle);
+			SIDE side = get_which_side(_balls[bal], _paddle);
 			float paddle_half_width = _paddle.dimension.width / 2;
 			switch (side) {
 			case TOP:
 				// To make the paddle collision like arkanoid, the x axis
 				// needs to be altered slightly depending on the position the
 				// ball collides with the paddle.
-				if (_balls[bul].coord.x < _paddle.coord.x + paddle_half_width) {
-					float distance = _paddle.coord.x - _balls[bul].coord.x;
+				if (_balls[bal].coord.x < _paddle.coord.x + paddle_half_width) {
+					float distance = _paddle.coord.x - _balls[bal].coord.x;
 					float half_pos = paddle_half_width + distance;
 					float new_heading = half_pos / paddle_half_width;
 
-					_balls[bul].coord.x_normal = -new_heading;
-					_balls[bul].coord.y_normal = -get_sin(new_heading);
+					_balls[bal].coord.x_normal = -new_heading;
+					_balls[bal].coord.y_normal = -get_sin(new_heading);
 				}
-				else if (_balls[bul].coord.x > _paddle.coord.x + paddle_half_width) {
+				else if (_balls[bal].coord.x > _paddle.coord.x + paddle_half_width) {
 					float distance = (_paddle.coord.x + _paddle.dimension.width) -
-									 (_balls[bul].coord.x + _balls[bul].dimension.width);
+									 (_balls[bal].coord.x + _balls[bal].dimension.width);
 					float half_pos = paddle_half_width - abs(distance);
 					float new_heading = half_pos / paddle_half_width;
 
-					_balls[bul].coord.x_normal = new_heading;
-					_balls[bul].coord.y_normal = -get_sin(new_heading);
+					_balls[bal].coord.x_normal = new_heading;
+					_balls[bal].coord.y_normal = -get_sin(new_heading);
 				}
 
-				//_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
+				//_balls[bal].coord.y_normal = -_balls[bal].coord.y_normal;
 				// Move ball back outside of the object it collided with because a collision
 				// means that some part of the ball is *inside* of the object. This formula
 				// puts the ball back outside of the object so that it does infinitely loop
 				// stuck insdie of the object.
-				_balls[bul].coord.y -= (_balls[bul].coord.y + _balls[bul].dimension.height) - _paddle.coord.y;
+				_balls[bal].coord.y -= (_balls[bal].coord.y + _balls[bal].dimension.height) - _paddle.coord.y;
 				break;
 			case RIGHT:
-				_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
-				_balls[bul].coord.x -= _balls[bul].coord.x - (_paddle.coord.x + _paddle.dimension.width);
+				_balls[bal].coord.x_normal = -_balls[bal].coord.x_normal;
+				_balls[bal].coord.x -= _balls[bal].coord.x - (_paddle.coord.x + _paddle.dimension.width);
 				break;
 			case BOT:
-				_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
-				_balls[bul].coord.y -= _balls[bul].coord.y - (_paddle.coord.y + _paddle.dimension.height);
+				_balls[bal].coord.y_normal = -_balls[bal].coord.y_normal;
+				_balls[bal].coord.y -= _balls[bal].coord.y - (_paddle.coord.y + _paddle.dimension.height);
 				break;
 			case LEFT:
-				_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
-				_balls[bul].coord.x -= (_balls[bul].coord.x + _balls[bul].dimension.width) - _paddle.coord.x;
+				_balls[bal].coord.x_normal = -_balls[bal].coord.x_normal;
+				_balls[bal].coord.x -= (_balls[bal].coord.x + _balls[bal].dimension.width) - _paddle.coord.x;
 				break;
 			default:
 				break;
@@ -468,38 +460,43 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 									   std::vector<Entity> &_entity,
 									   bool _is_edge)
 {
-	std::vector<Entity>::iterator it_bul = _balls.begin();
+	std::vector<Entity>::iterator it_bal = _balls.begin();
 	std::vector<Entity>::iterator it_ent = _entity.begin();
 
-	for (float bul = 0; bul < _balls.size(); ++it_bul, ++bul) {
+	for (float bal = 0; bal < _balls.size(); ++it_bal, ++bal) {
 		bool can_break = false;
 		for (float ent = 0; ent < _entity.size(); ++it_ent, ++ent) {
 			if (_entity[ent].is_dead) continue;
-			if (is_colliding(_balls[bul], _entity[ent])) {
+
+			if (is_colliding(_balls[bal], _entity[ent])) {
 				if (!_is_edge) {
 					_entity[ent].is_dead = true;
-					_balls[bul].is_dead = true;
+					_balls[bal].is_dead = true;
 				}
-				SIDE side = get_which_side(_balls[bul], _entity[ent]);
+
+				SIDE side = get_which_side(_balls[bal], _entity[ent]);
+
 				switch (side) {
 					case TOP:
-						_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
-						_balls[bul].coord.y -= (_balls[bul].coord.y + _balls[bul].dimension.height) - _entity[ent].coord.y;
+						_balls[bal].coord.y_normal = -_balls[bal].coord.y_normal;
+						_balls[bal].coord.y -= (_balls[bal].coord.y + _balls[bal].dimension.height) - _entity[ent].coord.y;
 						can_break = true;
 						break;
 					case RIGHT:
-						_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
-						_balls[bul].coord.x -= _balls[bul].coord.x - (_entity[ent].coord.x + _entity[ent].dimension.width);
+						_balls[bal].coord.x_normal = -_balls[bal].coord.x_normal;
+						_balls[bal].coord.x -= _balls[bal].coord.x - (_entity[ent].coord.x + _entity[ent].dimension.width);
 						can_break = true;
 						break;
 					case BOT:
-						_balls[bul].coord.y_normal = -_balls[bul].coord.y_normal;
-						_balls[bul].coord.y -= _balls[bul].coord.y - (_entity[ent].coord.y + _entity[ent].dimension.height);
+						// Reverse ball travel vector (heading)
+						_balls[bal].coord.y_normal = -_balls[bal].coord.y_normal;
+						// Move ball out of colliding object
+						_balls[bal].coord.y -= _balls[bal].coord.y - (_entity[ent].coord.y + _entity[ent].dimension.height);
 						can_break = true;
 						break;
 					case LEFT:
-						_balls[bul].coord.x_normal = -_balls[bul].coord.x_normal;
-						_balls[bul].coord.x -= (_balls[bul].coord.x + _balls[bul].dimension.width) - _entity[ent].coord.x;
+						_balls[bal].coord.x_normal = -_balls[bal].coord.x_normal;
+						_balls[bal].coord.x -= (_balls[bal].coord.x + _balls[bal].dimension.width) - _entity[ent].coord.x;
 						can_break = true;
 						break;
 					default:
@@ -562,18 +559,35 @@ bool AllegroW::is_colliding(Entity &_ent1, Entity &_ent2)
 
 void AllegroW::spawn_brick_grid(std::vector<Entity> &_bricks)
 {
-	int col = 4, row = 8;
-
+	// Erase all array elements
 	_bricks.clear();
 
-	for (float brick_count = 0; brick_count < col * row; ++brick_count) {
-	}
+	// Grid always stretches across screen with 4 pixels between
+	// each brick and 8 bricks wide
+	// 40 is 20 * 2 for 20 pixel wide screen edge left and right
+	// row - 1 is the number of gaps between the 8 bricks (or whatever amount)
+	float col = 8, row = 4,
+	      brick_gap = 4,
+	      edge_offset = 20,
+		  w = (SCREEN_WIDTH - ((edge_offset * 2) + ((brick_gap * col) - 1))) / col,
+	      h = 20,
+	      x = edge_offset,
+		  y = edge_offset;
 
-	for (float c_index = 0; c_index < col; ++c_index) {
-		for (float r_index = 0; r_index < row; ++r_index) {
-			_bricks.emplace_back(Vector2D(r_index * 60, c_index * 60), Dimension(50,50),0);
-			_bricks[_bricks.size() - 1].is_dead = false;
+	int i = 0;
+	for (float r_index = 0; r_index < row; ++r_index) {
+		for (float c_index = 0; c_index < col; ++c_index, ++i) {
+			// Set brick coords, width & height
+			_bricks.emplace_back(Vector2D(x,y), Dimension(w,h),0);
+
+			// Set default dead to false
+			_bricks[i].is_dead = false;
+
+			// Increment x&y coordinate by accordingly
+			x += w + brick_gap;
 		}
+		y += h + brick_gap;
+		x = edge_offset;
 	}
 }
 
