@@ -1,7 +1,7 @@
 #include "game.h"
 
 Game::Game()
-	: game_is_running(true)
+	: game_is_running(true), allegrow(game_is_running)
 {
 }
 

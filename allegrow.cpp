@@ -6,8 +6,9 @@
 #include <stdio.h>
 #include <math.h>
 
-AllegroW::AllegroW()
-	:	str(""),
+AllegroW::AllegroW(bool &_game_is_running)
+	:	game_is_running(_game_is_running),
+	    str(""),
 		keystr(""),
 		xt(1),
 		yt(1),
@@ -15,6 +16,12 @@ AllegroW::AllegroW()
 		can_draw(false),
 		can_update(false),
 		enter_key_is_down(false)
+{
+	_game_is_running = true;
+}
+
+AllegroW::AllegroW()
+	: game_is_running(game_is_running)
 {}
 
 AllegroW::~AllegroW() {}
@@ -266,44 +273,6 @@ void AllegroW::update_brick_grid(std::vector<Entity> &_bricks)
 
 }
 
-void AllegroW::handle_ball_brick_collision(std::vector<Entity> &_balls,
-											 std::vector<Entity> &_bricks)
-{
-	std::vector<Entity>::iterator blt_it = _balls.begin();
-	std::vector<Entity>::iterator brk_it = _bricks.begin();
-
-	bool can_break = false;
-
-
-	for (float blt = 0; blt < _balls.size(); ++blt,++blt_it) {
-		for (float brk = 0; brk < _bricks.size(); ++brk, ++brk_it) {
-			// Always check entity dead so we don't recheck collision on it
-			if (brk_it->is_dead) continue;
-
-			if (is_colliding(_balls[blt], _bricks[brk])) {
-				std::cout << "Collision" << std::endl;
-				// Set to true here and check for truth at draw time
-				// ... for now?
-				// TODO use remove_dead()
-				brk_it->is_dead = true;
-				blt_it->is_dead = true;
-
-				//_balls.erase(blt_it);
-				//bounce_ball(_balls[blt]);
-
-				// No need to continue looping since we found the
-				// entities that need to be removed/hp--
-				can_break = true;
-				break;
-			}
-		}
-			
-		if (can_break) break;
-		// Reset bricks array iterator to first
-		brk_it = _bricks.begin();
-	}
-}
-
 // Helper for checking which edge is being hit
 // TODO please move enum somewhere better
 enum SIDE { TOP, BOT, LEFT, RIGHT, NONE };
@@ -473,6 +442,7 @@ void AllegroW::handle_ball_collision(std::vector<Entity> &_balls,
 					_entity[ent].is_dead = true;
 					_balls[bal].is_dead = true;
 				}
+				else if (player_did_lose(_entity)) game_is_running = false;
 
 				SIDE side = get_which_side(_balls[bal], _entity[ent]);
 
@@ -648,4 +618,21 @@ void AllegroW::bounce_ball(Entity &_ball)
 		_ball.coord.x_normal = -_ball.coord.x_normal;
 	if (_ball.coord.y > SCREEN_HEIGHT - 6 || _ball.coord.y < 6)
 		_ball.coord.y_normal = -_ball.coord.y_normal;
+}
+
+bool AllegroW::player_did_win(std::vector<Entity> &_bricks)
+{
+	for (int i = 0; i < _bricks.size(); ++i)
+		// If one single brick is not dead, game not win
+		if (!_bricks[i].is_dead) return false;
+
+	return true;
+}
+
+bool AllegroW::player_did_lose(std::vector<Entity> &_edges)
+{
+	// For now, the third index is the bottom edge, so we don't
+	// need to loop through all four. But might need to later when
+	// add new entities to game.
+	return _edges[2].is_dead;
 }

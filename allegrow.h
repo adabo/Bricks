@@ -23,6 +23,7 @@ class Entity;
 class AllegroW
 {
 public:
+	AllegroW(bool &_game_is_running);
 	AllegroW();
 	~AllegroW();
 
@@ -47,11 +48,9 @@ public:
 				std::vector<Entity> &_boundaries,
 				Entity &_paddle);
 	void update_brick_grid(std::vector<Entity> &_bricks);
-	void handle_ball_brick_collision(std::vector<Entity> &_balls,
-		                               std::vector<Entity> &_bricks);
 	void handle_ball_collision(std::vector<Entity> &_balls,
-								 std::vector<Entity> &_edges,
-								 bool _is_edge);
+							   std::vector<Entity> &_edges,
+							   bool _is_edge);
 	void handle_ball_collision(std::vector<Entity> &_balls,
 								Entity &_paddle,
 								bool _is_edge);
@@ -62,6 +61,8 @@ public:
 	void spawn_edge_boundaries(std::vector<Entity> &_boundaries);
 	void remove_dead(Entity &_entity);
 	void bounce_ball(Entity &_ball);
+	bool player_did_win(std::vector<Entity> &_bricks);
+	bool player_did_lose(std::vector<Entity> &_edges);
 
 	/* Temporary members*/
 	float xt, yt;
@@ -80,6 +81,7 @@ public:
    	bool d_key_is_down;
 	bool space_key_is_down;
 	bool mouse_button_is_down;
+	bool &game_is_running;
 	ALLEGRO_EVENT_QUEUE *event_queue;
 	ALLEGRO_DISPLAY *display;
 	ALLEGRO_EVENT event;
