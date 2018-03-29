@@ -1,34 +1,23 @@
 #pragma once
 
-#include <iostream>
 #include <vector>
-#include "allegro_wrapper.h"
-#include "entity.h"
-#include "key_states.h"
-#include "mouse_states.h"
-#include "vector2D.h"
-#include "update.h"
-#include "draw.h"
+#include "vec2d.h"
+#include "class_entity-brick.h"
+#include "class_entity-edge.h"
+#include "class_entity-paddle.h"
+#include "allegrow.h"
 
 
 class Game
 {
 public:
-	Game();
+	Game(bool _game_is_running);
 	~Game();
+	void go();
 
-	void update();
-	void draw();
-
-	bool is_running;
-	bool can_update;
-	bool can_redraw;
-
-	AllegroW allegro;
-	KeyStates keybd;
-	MouseStates mouse;
-	Entity player;
-	Entity bullet;
-	Entity enemy;
+	AllegroW allegrow;
+	std::vector<Brick> bricks;
+	std::vector<Edge> edges;
+	Paddle paddle;
+	bool game_is_running;
 };
-

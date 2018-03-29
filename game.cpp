@@ -1,23 +1,21 @@
 #include "game.h"
 
-Game::Game()
+Game::Game(bool _game_is_running)
+	:allegrow(_game_is_running)
 {
+	 AllegroW allegrow(game_is_running);
 }
 
 Game::~Game()
 {
+
 }
 
-void Game::update()
+void Game::go()
 {
-	player.update();
-	bullet.update();
-	entity.update();
-}
+	allegrow.start_allegro_services();
 
-void Game::draw()
-{
-	player.draw();
-	bullet.draw();
-	entity.draw();
+	while(!game_is_running) {
+
+	}
 }
